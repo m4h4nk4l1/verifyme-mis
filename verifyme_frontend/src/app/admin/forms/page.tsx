@@ -132,7 +132,7 @@ export default function FormsPage() {
 
   const handleCreateFormSchema = async () => {
     try {
-      await apiClient.createFormSchema(schemaFormData)
+      await apiClient.createFormSchema(schemaFormData as Record<string, unknown>)
       toast.success('Form schema created successfully')
       setShowCreateDialog(false)
       setSchemaFormData({
@@ -615,89 +615,91 @@ export default function FormsPage() {
                 </DialogHeader>
                 
                 {editingSchema && (
-                  <Tabs defaultValue="fields" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="fields">Fields</TabsTrigger>
-                      <TabsTrigger value="settings">Settings</TabsTrigger>
-                    </TabsList>
+                  <>
+                    <Tabs defaultValue="fields" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="fields">Fields</TabsTrigger>
+                        <TabsTrigger value="settings">Settings</TabsTrigger>
+                      </TabsList>
 
-                    <TabsContent value="fields" className="space-y-4">
-                      <FieldEditor
-                        fields={schemaFormData.fields_definition}
-                        onFieldsChange={handleFieldsChange}
-                        maxFields={schemaFormData.max_fields}
-                        isExistingSchema={!!editingSchema?.id}
-                      />
-                    </TabsContent>
+                      <TabsContent value="fields" className="space-y-4">
+                        <FieldEditor
+                          fields={schemaFormData.fields_definition}
+                          onFieldsChange={handleFieldsChange}
+                          maxFields={schemaFormData.max_fields}
+                          isExistingSchema={!!editingSchema?.id}
+                        />
+                      </TabsContent>
 
-                    <TabsContent value="settings" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="edit-name">Form Name</Label>
-                          <Input
-                            id="edit-name"
-                            value={schemaFormData.name}
-                            onChange={(e) => setSchemaFormData({...schemaFormData, name: e.target.value})}
-                          />
+                      <TabsContent value="settings" className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="edit-name">Form Name</Label>
+                            <Input
+                              id="edit-name"
+                              value={schemaFormData.name}
+                              onChange={(e) => setSchemaFormData({...schemaFormData, name: e.target.value})}
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="edit-description">Description</Label>
+                            <Input
+                              id="edit-description"
+                              value={schemaFormData.description}
+                              onChange={(e) => setSchemaFormData({...schemaFormData, description: e.target.value})}
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="edit-max-fields">Maximum Fields</Label>
+                            <Input
+                              id="edit-max-fields"
+                              type="number"
+                              value={schemaFormData.max_fields}
+                              onChange={(e) => setSchemaFormData({...schemaFormData, max_fields: parseInt(e.target.value)})}
+                              min="1"
+                              max="120"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="edit-tat-hours-limit">TAT Hours Limit</Label>
+                            <Input
+                              id="edit-tat-hours-limit"
+                              type="number"
+                              value={schemaFormData.tat_hours_limit}
+                              onChange={(e) => setSchemaFormData({...schemaFormData, tat_hours_limit: parseInt(e.target.value)})}
+                              min="1"
+                              max="168"
+                            />
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="edit-is-active"
+                              checked={schemaFormData.is_active}
+                              onChange={(e) => setSchemaFormData({...schemaFormData, is_active: e.target.checked})}
+                              className="rounded"
+                            />
+                            <Label htmlFor="edit-is-active">Active</Label>
+                          </div>
                         </div>
+                      </TabsContent>
+                    </Tabs>
 
-                        <div>
-                          <Label htmlFor="edit-description">Description</Label>
-                          <Input
-                            id="edit-description"
-                            value={schemaFormData.description}
-                            onChange={(e) => setSchemaFormData({...schemaFormData, description: e.target.value})}
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="edit-max-fields">Maximum Fields</Label>
-                          <Input
-                            id="edit-max-fields"
-                            type="number"
-                            value={schemaFormData.max_fields}
-                            onChange={(e) => setSchemaFormData({...schemaFormData, max_fields: parseInt(e.target.value)})}
-                            min="1"
-                            max="120"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="edit-tat-hours-limit">TAT Hours Limit</Label>
-                          <Input
-                            id="edit-tat-hours-limit"
-                            type="number"
-                            value={schemaFormData.tat_hours_limit}
-                            onChange={(e) => setSchemaFormData({...schemaFormData, tat_hours_limit: parseInt(e.target.value)})}
-                            min="1"
-                            max="168"
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="edit-is-active"
-                            checked={schemaFormData.is_active}
-                            onChange={(e) => setSchemaFormData({...schemaFormData, is_active: e.target.checked})}
-                            className="rounded"
-                          />
-                          <Label htmlFor="edit-is-active">Active</Label>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button variant="outline" onClick={() => setEditingSchema(null)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleUpdateFormSchema}>
-                      Update Schema
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button variant="outline" onClick={() => setEditingSchema(null)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleUpdateFormSchema}>
+                        Update Schema
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </DialogContent>
             </Dialog>
           </TabsContent>
 
