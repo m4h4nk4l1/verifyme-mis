@@ -318,7 +318,7 @@ class FormFieldFileSerializer(serializers.ModelSerializer):
         model = FormFieldFile
         fields = [
             'id', 'form_entry', 'field_name', 'file', 'file_url', 's3_url', 'original_filename',
-            'file_type', 'file_size', 'file_size_mb', 'description',
+            'file_type', 'file_size', 'file_size_mb', 'description', 'is_temporary',
             'is_verified', 'verification_notes', 'uploaded_by',
             'uploaded_by_name', 'verified_by', 'verified_by_name',
             'verified_at', 'uploaded_at'
@@ -348,7 +348,7 @@ class FormFieldFileCreateSerializer(serializers.ModelSerializer):
         model = FormFieldFile
         fields = [
             'form_entry', 'field_name', 'file', 'original_filename', 'file_type',
-            'file_size', 'description', 'uploaded_by'
+            'file_size', 'description', 'uploaded_by', 'is_temporary'
         ]
         read_only_fields = ['uploaded_by']
     
@@ -357,6 +357,11 @@ class FormFieldFileCreateSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
             validated_data['uploaded_by'] = request.user
+        
+        # Set is_temporary to True by default for new uploads
+        if 'is_temporary' not in validated_data:
+            validated_data['is_temporary'] = True
+            
         return super().create(validated_data)
 
 class FormFieldFileUpdateSerializer(serializers.ModelSerializer):

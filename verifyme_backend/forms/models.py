@@ -70,19 +70,7 @@ class OrganizationAutoIncrementField(models.PositiveIntegerField):
         super().__init__(*args, **kwargs)
     
     def pre_save(self, model_instance, add):
-        if add and not getattr(model_instance, self.attname):
-            # Get the organization
-            org = getattr(model_instance, 'organization')
-            if org:
-                # Get the next case_id for this organization
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        SELECT COALESCE(MAX(case_id), 0) + 1
-                        FROM forms_formentry 
-                        WHERE organization_id = %s
-                    """, [org.id])
-                    next_id = cursor.fetchone()[0]
-                    setattr(model_instance, self.attname, next_id)
+        # Don't set case_id here, we'll do it in post_save
         return super().pre_save(model_instance, add)
 
 class FormEntry(models.Model):
@@ -119,6 +107,30 @@ class FormEntry(models.Model):
 
     def __str__(self):
         return f"Case {self.case_id} - {self.organization.name}"
+
+    def save(self, *args, **kwargs):
+        # Set case_id if not already set and organization is available
+        if not self.case_id and self.organization:
+            # Use a simple approach to get the next case_id
+            try:
+                # Get the current max case_id for this organization
+                max_case_id = FormEntry.objects.filter(
+                    organization=self.organization
+                ).aggregate(
+                    max_id=models.Max('case_id')
+                )['max_id'] or 0
+                
+                # Set the next case_id
+                self.case_id = max_case_id + 1
+            except Exception as e:
+                # If there's an error, try to get a unique case_id
+                import random
+                import time
+                timestamp = int(time.time())
+                random_num = random.randint(1000, 9999)
+                self.case_id = timestamp + random_num
+        
+        super().save(*args, **kwargs)
 
     @property
     def tat_duration(self):
@@ -241,7 +253,7 @@ class FormField(models.Model):
 class FormFieldFile(models.Model):
     """Model for file uploads associated with form fields"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    form_entry = models.ForeignKey(FormEntry, on_delete=models.CASCADE, related_name='field_files')
+    form_entry = models.ForeignKey(FormEntry, on_delete=models.CASCADE, related_name='field_files', null=True, blank=True)
     field_name = models.CharField(max_length=100)  # The field name in the form schema
     file = models.FileField(upload_to=get_file_upload_path)
     s3_url = models.URLField(max_length=500, blank=True, null=True)  # Store S3 URL directly
@@ -255,10 +267,18 @@ class FormFieldFile(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_field_files')
     verified_at = models.DateTimeField(null=True, blank=True)
+    is_temporary = models.BooleanField(default=True)  # Flag to identify temporary entries
 
     class Meta:
         ordering = ['-uploaded_at']
-        unique_together = ['form_entry', 'field_name']
+        # Only enforce unique constraint for non-temporary entries
+        constraints = [
+            models.UniqueConstraint(
+                fields=['form_entry', 'field_name'],
+                condition=models.Q(is_temporary=False),
+                name='unique_form_field_file'
+            )
+        ]
 
     def __str__(self):
         return f"{self.field_name} - {self.original_filename}"

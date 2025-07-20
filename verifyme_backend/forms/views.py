@@ -430,6 +430,7 @@ class FormEntryViewSet(viewsets.ModelViewSet):
                     
                     file_obj.form_entry = entry
                     file_obj.field_name = field_name
+                    file_obj.is_temporary = False  # Mark as permanent
                     file_obj.save()
                     
                     logger.info(f"✅ Updated file {file_id} to point to form entry {entry.id}")

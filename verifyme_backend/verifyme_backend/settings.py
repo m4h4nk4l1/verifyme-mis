@@ -35,7 +35,9 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 if DEBUG:
     ALLOWED_HOSTS = [
         'localhost', 
-        '127.0.0.1', 
+        '127.0.0.1',
+        '3.109.144.213',  # Add your backend IP
+        '172.31.38.125',
         '*',
         'verifyme-backend-1032098858.loca.lt',  # Localtunnel backend
         'verifyme-frontend-1032098858.loca.lt',  # Localtunnel frontend
@@ -46,6 +48,8 @@ else:
     ALLOWED_HOSTS = [
         'localhost',
         '127.0.0.1',
+        '3.109.144.213',  # Add your backend IP
+        '172.31.38.125',
         'your-domain.com',  # Replace with your actual domain
         'www.your-domain.com',  # Replace with your actual domain
     ]
@@ -266,6 +270,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js development server
     "http://127.0.0.1:3000",
     "http://localhost:3001",
+    'http://3.109.144.213',  # Add your backend IP
+    'http://172.31.38.125',
     # Localtunnel
     "https://verifyme-frontend-1032098858.loca.lt",
     "https://verifyme-backend-1032098858.loca.lt",
