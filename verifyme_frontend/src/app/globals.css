@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* Prevent horizontal scrolling globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+* {
+  font-family: Arial, sans-serif;
+}
+
+/* AG Grid custom styles */
+.ag-theme-alpine {
+  font-family: Arial, sans-serif !important;
+}
+
+.ag-theme-alpine .ag-header-cell {
+  font-family: Arial, sans-serif !important;
+}
+
+.ag-theme-alpine .ag-cell {
+  font-family: Arial, sans-serif !important;
+}
+
+.ag-theme-alpine .ag-header-cell, 
+.ag-theme-alpine .ag-cell {
+  border-right: 1px solid #d1d5db !important; /* Tailwind gray-300 */
+  border-bottom: 1px solid #e5e7eb !important; /* Tailwind gray-200 */
+}
+
+.ag-theme-alpine .ag-header-row {
+  border-bottom: 2px solid #9ca3af !important; /* Tailwind gray-400 */
+}
+
+.ag-theme-alpine .ag-row:last-child .ag-cell {
+  border-bottom: 2px solid #9ca3af !important;
+}
+
+.ag-theme-alpine .ag-cell:last-child, 
+.ag-theme-alpine .ag-header-cell:last-child {
+  border-right: 2px solid #9ca3af !important;
+} 
