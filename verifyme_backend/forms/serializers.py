@@ -108,16 +108,17 @@ class FormEntrySerializer(serializers.ModelSerializer):
     is_out_of_tat = serializers.SerializerMethodField()
     filtered_form_data = serializers.SerializerMethodField()
     display_case_id = serializers.SerializerMethodField()
+    entry_id = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = FormEntry
         fields = [
-            'id', 'case_id', 'display_case_id', 'employee', 'organization_name', 'employee_name', 'form_schema_name',
+            'id', 'entry_id', 'case_id', 'display_case_id', 'employee', 'organization_name', 'employee_name', 'form_schema_name',
             'form_schema_details', 'form_data', 'filtered_form_data', 'is_completed', 'is_verified',
             'verification_notes', 'verified_by_name', 'tat_start_time', 'tat_completion_time', 'tat_duration_hours',
             'tat_limit_hours', 'is_out_of_tat', 'status', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'case_id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'entry_id', 'case_id', 'created_at', 'updated_at']
     
     def get_display_case_id(self, obj):
         """Get properly formatted case ID for display"""
@@ -200,17 +201,40 @@ class FormEntryCreateSerializer(serializers.ModelSerializer):
     # Make employee and organization optional for creation
     employee = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False)
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all(), required=False)
+    case_id = serializers.IntegerField(required=False, read_only=True)  # Add case_id field
+    entry_id = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = FormEntry
         fields = [
-            'id', 'form_schema', 'form_data', 'employee', 'organization'
+            'id', 'entry_id', 'case_id', 'form_schema', 'form_data', 'employee', 'organization'
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'entry_id']
     
     def validate(self, data):
-        """Make employee and organization optional for creation"""
-        # These fields will be set in perform_create
+        """Validate form entry creation data"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"🔍 Validating form entry data: {data}")
+        
+        # Check if form_schema exists and is active
+        form_schema = data.get('form_schema')
+        if not form_schema:
+            raise serializers.ValidationError("form_schema is required")
+        
+        if not form_schema.is_active:
+            raise serializers.ValidationError("Form schema is not active")
+        
+        logger.info(f"✅ Form schema validation passed: {form_schema.id}")
+        
+        # Validate form_data structure
+        form_data = data.get('form_data', {})
+        if not isinstance(form_data, dict):
+            raise serializers.ValidationError("form_data must be a dictionary")
+        
+        logger.info(f"✅ Form data validation passed: {form_data}")
+        
         return data
 
 class FormEntryUpdateSerializer(serializers.ModelSerializer):

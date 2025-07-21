@@ -103,6 +103,10 @@ export function AdvancedFilters({
   }
 
   const handleApplyFilters = () => {
+    console.log('🔍 Apply Filters button clicked!')
+    console.log('🔍 Current local filters:', localFilters)
+    console.log('🔍 Schema fields:', schemaFields)
+    
     // Check for schema field warnings
     const businessFields = [
       { filterKey: 'bankNbfc', schemaField: 'bank_nbfc_name' },
@@ -119,6 +123,8 @@ export function AdvancedFilters({
       const existsInSchema = schemaFields.includes(field.schemaField)
       return hasValue && !existsInSchema
     })
+
+    console.log('🔍 Missing fields:', missingFields)
 
     if (missingFields.length > 0) {
       setShowWarnings(true)
@@ -139,7 +145,9 @@ export function AdvancedFilters({
       setShowWarnings(false)
     }
 
+    console.log('🔍 Calling onFiltersChange with:', localFilters)
     onFiltersChange(localFilters)
+    console.log('🔍 Apply Filters completed!')
   }
 
   const handleClearFilters = () => {
@@ -246,6 +254,12 @@ export function AdvancedFilters({
       { value: 'false', label: 'New Cases' }
     ]
   }
+
+  // Define always-present fields
+  const alwaysPresentFields = ['tat', 'agency_id', 'case_status']
+
+  // Helper to check if a field should be shown
+  const hasField = (schemaField: string) => alwaysPresentFields.includes(schemaField) || schemaFields.includes(schemaField)
 
   return (
     <Card>
@@ -372,89 +386,101 @@ export function AdvancedFilters({
             Business Filters
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bankNbfc">Bank/NBFC Name</Label>
-              <Input
-                id="bankNbfc"
-                placeholder="Enter bank or NBFC name"
-                value={localFilters.bankNbfc || ''}
-                onChange={(e) => handleFilterChange('bankNbfc', e.target.value)}
-              />
-            </div>
+            {hasField('bank_nbfc_name') && (
+              <div className="space-y-2">
+                <Label htmlFor="bankNbfc">Bank/NBFC Name</Label>
+                <Input
+                  id="bankNbfc"
+                  placeholder="Enter bank or NBFC name"
+                  value={localFilters.bankNbfc || ''}
+                  onChange={(e) => handleFilterChange('bankNbfc', e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <select
-                id="location"
-                value={localFilters.location || ''}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {getLocationOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {hasField('location') && (
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <select
+                  id="location"
+                  value={localFilters.location || ''}
+                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {getLocationOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="productType">Product Type</Label>
-              <Input
-                id="productType"
-                placeholder="e.g., Auto, Home, Personal"
-                value={localFilters.productType || ''}
-                onChange={(e) => handleFilterChange('productType', e.target.value)}
-              />
-            </div>
+            {hasField('product_type') && (
+              <div className="space-y-2">
+                <Label htmlFor="productType">Product Type</Label>
+                <Input
+                  id="productType"
+                  placeholder="e.g., Auto, Home, Personal"
+                  value={localFilters.productType || ''}
+                  onChange={(e) => handleFilterChange('productType', e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="caseStatus">Case Status</Label>
-              <select
-                id="caseStatus"
-                value={localFilters.caseStatus || ''}
-                onChange={(e) => handleFilterChange('caseStatus', e.target.value)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {getCaseStatusOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {hasField('case_status') && (
+              <div className="space-y-2">
+                <Label htmlFor="caseStatus">Case Status</Label>
+                <select
+                  id="caseStatus"
+                  value={localFilters.caseStatus || ''}
+                  onChange={(e) => handleFilterChange('caseStatus', e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {getCaseStatusOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="isRepeatCase">Repeat Cases</Label>
-              <select
-                id="isRepeatCase"
-                value={localFilters.isRepeatCase?.toString() || ''}
-                onChange={(e) => handleFilterChange('isRepeatCase', e.target.value === 'true')}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {getRepeatCaseOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {hasField('is_repeat_case') && (
+              <div className="space-y-2">
+                <Label htmlFor="isRepeatCase">Repeat Cases</Label>
+                <select
+                  id="isRepeatCase"
+                  value={localFilters.isRepeatCase?.toString() || ''}
+                  onChange={(e) => handleFilterChange('isRepeatCase', e.target.value === 'true')}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {getRepeatCaseOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="isOutOfTat">TAT Status</Label>
-              <select
-                id="isOutOfTat"
-                value={localFilters.isOutOfTat?.toString() || ''}
-                onChange={(e) => handleFilterChange('isOutOfTat', e.target.value === 'true')}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {getTatOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {hasField('tat') && (
+              <div className="space-y-2">
+                <Label htmlFor="isOutOfTat">TAT Status</Label>
+                <select
+                  id="isOutOfTat"
+                  value={localFilters.isOutOfTat?.toString() || ''}
+                  onChange={(e) => handleFilterChange('isOutOfTat', e.target.value === 'true')}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {getTatOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -465,60 +491,72 @@ export function AdvancedFilters({
             Personnel Filters
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fieldVerifier">Field Verifier Name</Label>
-              <Input
-                id="fieldVerifier"
-                placeholder="Enter field verifier name"
-                value={localFilters.fieldVerifier || ''}
-                onChange={(e) => handleFilterChange('fieldVerifier', e.target.value)}
-              />
-            </div>
+            {hasField('field_verifier_name') && (
+              <div className="space-y-2">
+                <Label htmlFor="fieldVerifier">Field Verifier Name</Label>
+                <Input
+                  id="fieldVerifier"
+                  placeholder="Enter field verifier name"
+                  value={localFilters.fieldVerifier || ''}
+                  onChange={(e) => handleFilterChange('fieldVerifier', e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="backOfficeExecutive">Back Office Executive Name</Label>
-              <Input
-                id="backOfficeExecutive"
-                placeholder="Enter back office executive name"
-                value={localFilters.backOfficeExecutive || ''}
-                onChange={(e) => handleFilterChange('backOfficeExecutive', e.target.value)}
-              />
-            </div>
+            {hasField('back_office_executive_name') && (
+              <div className="space-y-2">
+                <Label htmlFor="backOfficeExecutive">Back Office Executive Name</Label>
+                <Input
+                  id="backOfficeExecutive"
+                  placeholder="Enter back office executive name"
+                  value={localFilters.backOfficeExecutive || ''}
+                  onChange={(e) => handleFilterChange('backOfficeExecutive', e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="employee">Employee</Label>
-              <Input
-                id="employee"
-                placeholder="Search by employee name"
-                value={localFilters.employee || ''}
-                onChange={(e) => handleFilterChange('employee', e.target.value)}
-              />
-            </div>
+            {hasField('employee') && (
+              <div className="space-y-2">
+                <Label htmlFor="employee">Employee</Label>
+                <Input
+                  id="employee"
+                  placeholder="Search by employee name"
+                  value={localFilters.employee || ''}
+                  onChange={(e) => handleFilterChange('employee', e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Entry Status</Label>
-              <select
-                id="status"
-                value={localFilters.status || ''}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {getStatusOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {hasField('status') && (
+              <div className="space-y-2">
+                <Label htmlFor="status">Entry Status</Label>
+                <select
+                  id="status"
+                  value={localFilters.status || ''}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {getStatusOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 pt-4">
           <Button 
-            onClick={handleApplyFilters}
+            onClick={() => {
+              console.log('🔍 Button clicked!')
+              handleApplyFilters()
+            }}
             disabled={isLoading}
             className="flex items-center gap-2"
+            type="button"
           >
             <Filter className="w-4 h-4" />
             Apply Filters

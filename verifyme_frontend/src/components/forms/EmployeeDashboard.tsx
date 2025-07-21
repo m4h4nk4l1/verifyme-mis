@@ -24,22 +24,10 @@ import {
   Calendar,
   X,
   FileText as FileTextIcon,
-  Users,
-  Building2,
-  Globe,
-  BarChart3,
-  CheckCircle as CheckCircleIcon,
-  Clock,
-  User,
-  File,
-  Image,
-  Info,
-  UserCheck,
-  Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiClient } from '@/lib/api';
-import { FormEntry, FormEntryStatistics, OrganizationStatistics } from '@/types/api';
+import { FormEntry, FormEntryStatistics } from '@/types/api';
 import { toast } from 'sonner';
 
 interface EmployeeDashboardProps {
@@ -61,6 +49,7 @@ const ViewModal = ({ entry, onClose }: { entry: FormEntry, onClose: () => void }
         <div>
           <h3 className="font-semibold mb-2">Basic Information</h3>
           <div className="space-y-2">
+            <div><strong>Entry ID:</strong> {entry.entry_id || 'N/A'}</div>
             <div><strong>Case ID:</strong> {entry.case_id || 'N/A'}</div>
             <div><strong>Status:</strong> 
               <Badge className={`ml-2 ${entry.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -139,7 +128,6 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
   
   // State management
   const [formEntries, setFormEntries] = useState<FormEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [schemaFields, setSchemaFields] = useState<string[]>([]);
   const [caseCounts, setCaseCounts] = useState<{
@@ -167,15 +155,6 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
   });
 
   // Count feature
-  const [countDateFrom, setCountDateFrom] = useState('');
-  const [countDateTo, setCountDateTo] = useState('');
-  const [entryCount, setEntryCount] = useState(0);
-  const [countLoading, setCountLoading] = useState(false);
-
-  // Export loading state
-  const [exportLoading, setExportLoading] = useState(false);
-
-  // Date range for exports
   const [dateRange, setDateRange] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -198,18 +177,18 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
 
   // Statistics state
   const [formStatistics, setFormStatistics] = useState<FormEntryStatistics | null>(null);
-  const [orgStatistics, setOrgStatistics] = useState<OrganizationStatistics | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
   // File handling state
   const [fileInfo, setFileInfo] = useState<Record<string, unknown>>({});
   const [failedFileIds, setFailedFileIds] = useState<Set<string>>(new Set());
+  const [exportLoading, setExportLoading] = useState(false);
 
 
   // Simple data loading function
   const loadData = async (search?: string, filterParams?: Record<string, unknown>) => {
     try {
-      setLoading(true);
+      setEntriesLoading(true);
       
       // Check if we have advanced filters
       const hasAdvancedFilters = filterParams && Object.keys(filterParams).length > 0;
@@ -283,7 +262,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       console.error('Error fetching form entries:', error);
       toast.error('Failed to load data');
     } finally {
-      setLoading(false);
+      setEntriesLoading(false);
     }
   };
 
@@ -322,34 +301,15 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
     }
   };
 
-  // Load entry count for date range
-  const loadEntryCount = async () => {
-    if (!countDateFrom || !countDateTo) return;
-    
-    try {
-      setCountLoading(true);
-      const response = await apiClient.getDateRangeCount({
-        start_date: countDateFrom,
-        end_date: countDateTo
-      });
-      setEntryCount(response.count || 0);
-    } catch (error) {
-      console.error('Error fetching entry count:', error);
-    } finally {
-      setCountLoading(false);
-    }
-  };
-
   // Statistics functions
   const fetchStatistics = async () => {
     try {
       setStatsLoading(true)
-      const [formStats, orgStats] = await Promise.all([
-        apiClient.getFormEntryStatistics(),
-        apiClient.getOrganizationStatistics()
+      const [formStats] = await Promise.all([
+        apiClient.getFormEntryStatistics()
       ])
       setFormStatistics(formStats)
-      setOrgStatistics(orgStats)
+      // setOrgStatistics(orgStats) // Removed as per edit hint
     } catch (error) {
       console.error('Error fetching statistics:', error)
       toast.error('Failed to load statistics')
@@ -454,11 +414,10 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
     fetchFormEntries()
   }, [])
 
-  // Fetch form entries when pagination or filters change
+  // Update useEffect to depend on both advancedFilters and currentPage
   useEffect(() => {
-    console.log('🔍 useEffect triggered - currentPage:', currentPage, 'advancedFilters changed')
-    fetchFormEntries()
-  }, [currentPage]) // Removed advancedFilters from dependency to prevent double calls
+    fetchFormEntries();
+  }, [advancedFilters, currentPage]);
 
   // Handle advanced filters changes separately
   useEffect(() => {
@@ -580,15 +539,15 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
     if (typeof value === 'string' && value.length === 36 && value.includes('-')) {
       // Check if it's a file ID
       const file = fileInfo[value];
-      if (file && file.file_url) {
+      if (file && typeof file === 'object' && 'file_url' in file) {
         return (
           <a 
-            href={file.file_url} 
+            href={(file as { file_url: string }).file_url} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 underline"
           >
-            📎 {(file as any).original_filename || 'View File'}
+            📎 {(file as { original_filename?: string }).original_filename || 'View File'}
           </a>
         );
       } else {
@@ -632,12 +591,12 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       if (value && typeof value === 'object' && 'file_url' in value) {
         return (
           <a 
-            href={value.file_url as string} 
+            href={(value as { file_url: string }).file_url} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 underline"
           >
-            📎 {(value as any).original_filename || 'View File'}
+            📎 {(value as { original_filename?: string }).original_filename || 'View File'}
           </a>
         );
       }
@@ -746,11 +705,13 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
     if (!selectedEntry) return;
     
     try {
-      await apiClient.updateFormEntry(selectedEntry.id, formData);
+      await apiClient.updateFormEntry(selectedEntry.id, { form_data: formData });
       setShowEditModal(false);
       loadData();
+      toast.success('Entry updated successfully!');
     } catch (error) {
       console.error('Error updating entry:', error);
+      toast.error('Failed to update entry. Please try again.');
     }
   };
 
@@ -936,7 +897,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-bold text-green-900">Completed</CardTitle>
-            <CheckCircleIcon className="h-6 w-6 text-green-600" />
+            <CheckCircle className="h-6 w-6 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900">
@@ -976,7 +937,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-bold text-purple-900">This Month</CardTitle>
-            <BarChart3 className="h-6 w-6 text-purple-600" />
+            <FileTextIcon className="h-6 w-6 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-900">
@@ -1129,7 +1090,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                   clearFilters();
                   fetchFormEntries();
                 }}
-                isLoading={loading}
+                isLoading={entriesLoading}
                 schemaFields={schemaFields}
                 warnings={[]}
               />
@@ -1198,7 +1159,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">
                               <input type="checkbox" className="rounded border-gray-300" />
                             </TableHead>
-                            <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">CASE ID</TableHead>
+                            <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">ENTRY ID</TableHead>
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">DATE</TableHead>
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">STATUS</TableHead>
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">EMPLOYEE</TableHead>
@@ -1255,12 +1216,12 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                                 if (value && typeof value === 'object' && 'file_url' in value) {
                                   return (
                                     <a 
-                                      href={value.file_url as string} 
+                                      href={(value as { file_url: string }).file_url} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-blue-600 hover:text-blue-800 underline text-xs"
                                     >
-                                      📎 {(value as any).original_filename || 'View File'}
+                                      📎 {(value as { original_filename?: string }).original_filename || 'View File'}
                                     </a>
                                   );
                                 }
@@ -1280,7 +1241,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                                 </TableCell>
                                 <TableCell className="py-4 px-4 font-medium text-blue-600 whitespace-nowrap">
                                   <div className="font-medium text-gray-900">
-                                    {entry.display_case_id || entry.case_id || 'N/A'}
+                                    {entry.entry_id ?? 'N/A'}
                                   </div>
                                 </TableCell>
                                 <TableCell className="py-4 px-4 text-sm text-gray-600 whitespace-nowrap">

@@ -61,22 +61,11 @@ class DynamicFormSchema(models.Model):
         """Return the number of fields in the schema"""
         return len(self.fields_definition) if self.fields_definition else 0
 
-class OrganizationAutoIncrementField(models.PositiveIntegerField):
-    """Custom field that auto-increments per organization"""
-    
-    def __init__(self, *args, **kwargs):
-        kwargs['null'] = True  # Allow null initially
-        kwargs['blank'] = True
-        super().__init__(*args, **kwargs)
-    
-    def pre_save(self, model_instance, add):
-        # Don't set case_id here, we'll do it in post_save
-        return super().pre_save(model_instance, add)
-
 class FormEntry(models.Model):
     """Form entry model"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    case_id = OrganizationAutoIncrementField(help_text="Auto-incrementing case ID per organization")
+    entry_id = models.PositiveIntegerField(null=True, blank=True, help_text="Auto-incrementing entry ID per organization")
+    case_id = models.PositiveIntegerField(null=True, blank=True, help_text="Case ID for grouping")
     organization = models.ForeignKey('accounts.Organization', on_delete=models.CASCADE, related_name='form_entries')
     employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='form_entries')
     form_schema = models.ForeignKey(DynamicFormSchema, on_delete=models.CASCADE, related_name='entries')
@@ -101,35 +90,40 @@ class FormEntry(models.Model):
             models.Index(fields=['is_completed']),
             models.Index(fields=['created_at']),
             models.Index(fields=['case_id']),
+            models.Index(fields=['entry_id']),
         ]
-        # Make case_id unique per organization
-        unique_together = ['organization', 'case_id']
+        unique_together = [('organization', 'entry_id')]
 
     def __str__(self):
-        return f"Case {self.case_id} - {self.organization.name}"
+        return f"Entry {self.entry_id} (Case {self.case_id}) - {self.organization.name}"
 
     def save(self, *args, **kwargs):
+        # Always set entry_id if not set
+        if not self.entry_id and self.organization:
+            last = FormEntry.objects.filter(organization=self.organization).aggregate(
+                max_id=models.Max('entry_id')
+            )['max_id'] or 0
+            candidate = last + 1
+            while FormEntry.objects.filter(organization=self.organization, entry_id=candidate).exists():
+                candidate += 1
+            self.entry_id = candidate
+
         # Set case_id if not already set and organization is available
         if not self.case_id and self.organization:
-            # Use a simple approach to get the next case_id
             try:
-                # Get the current max case_id for this organization
-                max_case_id = FormEntry.objects.filter(
-                    organization=self.organization
-                ).aggregate(
-                    max_id=models.Max('case_id')
-                )['max_id'] or 0
-                
-                # Set the next case_id
-                self.case_id = max_case_id + 1
-            except Exception as e:
-                # If there's an error, try to get a unique case_id
-                import random
-                import time
-                timestamp = int(time.time())
-                random_num = random.randint(1000, 9999)
+                self.case_id = self.generate_unique_case_id(self.organization)
+            except Exception:
+                import time, random
+                timestamp = int(time.time() * 1000) % 1000000
+                random_num = random.randint(100, 999)
                 self.case_id = timestamp + random_num
-        
+                while FormEntry.objects.filter(
+                    organization=self.organization,
+                    case_id=self.case_id
+                ).exists():
+                    random_num = random.randint(100, 999)
+                    self.case_id = timestamp + random_num
+
         super().save(*args, **kwargs)
 
     @property

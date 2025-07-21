@@ -15,6 +15,9 @@ export interface User {
   updated_at: string
   employee_data?: Record<string, unknown>
   phone?: string
+  // Password fields for employee creation
+  password?: string
+  confirm_password?: string
 }
 
 export interface Organization {
@@ -68,7 +71,8 @@ export interface FormSchema {
 // Form Entry Types with Filtering Fields
 export interface FormEntry {
   id: string
-  case_id: number
+  entry_id: number // Unique per org, auto-increment
+  case_id: number // Grouping field, not unique
   display_case_id?: number
   organization: string
   employee: User

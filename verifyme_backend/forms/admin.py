@@ -42,10 +42,10 @@ class DynamicFormSchemaAdmin(admin.ModelAdmin):
 
 @admin.register(FormEntry)
 class FormEntryAdmin(admin.ModelAdmin):
-    list_display = ['case_id', 'organization', 'employee', 'form_schema', 'is_completed', 'is_verified', 'is_out_of_tat_display', 'tat_duration_display', 'created_at']
+    list_display = ['entry_id', 'case_id', 'organization', 'employee', 'form_schema', 'is_completed', 'is_verified', 'is_out_of_tat_display', 'tat_duration_display', 'created_at']
     list_filter = ['is_completed', 'is_verified', 'organization', 'form_schema', 'created_at']
-    search_fields = ['case_id', 'employee__first_name', 'employee__last_name', 'form_schema__name']
-    readonly_fields = ['case_id', 'created_at', 'updated_at', 'tat_duration', 'is_out_of_tat']
+    search_fields = ['entry_id', 'case_id', 'employee__first_name', 'employee__last_name', 'form_schema__name']
+    readonly_fields = ['entry_id', 'case_id', 'created_at', 'updated_at', 'tat_duration', 'is_out_of_tat']
     
     fieldsets = (
         ('Basic Information', {

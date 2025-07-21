@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Create axios instance
 const api = axios.create({
@@ -135,18 +135,64 @@ export const apiClient = {
   },
 
   createEmployee: async (data: Record<string, unknown>) => {
-    const response = await api.post('/accounts/api/users/create-employee/', data);
-    return response.data;
+    try {
+      console.log('🔍 Creating employee with data:', data);
+      const response = await api.post('/accounts/api/users/create-employee/', data);
+      console.log('🔍 Employee created successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error creating employee:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: unknown, status?: number } }
+        console.error('❌ Response status:', errorResponse.response?.status);
+        console.error('❌ Response data:', errorResponse.response?.data);
+        
+        if (errorResponse.response?.status === 400) {
+          const errorData = errorResponse.response.data as Record<string, unknown>;
+          if (errorData && typeof errorData === 'object') {
+            // Return validation errors in a structured format
+            throw new Error(JSON.stringify(errorData));
+          }
+        }
+      }
+      throw error;
+    }
   },
 
   updateEmployee: async (id: string, data: Record<string, unknown>) => {
-    const response = await api.put(`/accounts/api/users/${id}/update-employee/`, data);
-    return response.data;
+    try {
+      console.log('🔍 Updating employee with data:', data);
+      const response = await api.patch(`/accounts/api/users/${id}/update-employee/`, data);
+      console.log('🔍 Employee updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error updating employee:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: unknown, status?: number } }
+        console.error('❌ Response status:', errorResponse.response?.status);
+        console.error('❌ Response data:', errorResponse.response?.data);
+        
+        if (errorResponse.response?.status === 400) {
+          const errorData = errorResponse.response.data as Record<string, unknown>;
+          if (errorData && typeof errorData === 'object') {
+            throw new Error(JSON.stringify(errorData));
+          }
+        }
+      }
+      throw error;
+    }
   },
 
   deleteEmployee: async (id: string) => {
-    const response = await api.delete(`/accounts/api/users/${id}/delete-employee/`);
-    return response.data;
+    try {
+      console.log('🔍 Deleting employee:', id);
+      const response = await api.delete(`/accounts/api/users/${id}/delete-employee/`);
+      console.log('🔍 Employee deleted successfully');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error deleting employee:', error);
+      throw error;
+    }
   },
 
   getRealTimeAnalytics: async () => {
@@ -453,6 +499,72 @@ export const apiClient = {
       responseType: 'blob',
     });
     return response.data;
+  },
+
+  // Enhanced export functionality with date range filtering
+  enhancedExportData: async (exportData: {
+    format: 'excel' | 'pdf' | 'csv'
+    filters: {
+      date_range?: 'all' | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'custom'
+      custom_start_date?: string
+      custom_end_date?: string
+      case_id_from?: number
+      case_id_to?: number
+      form_schema?: string
+      status?: 'pending' | 'completed' | 'verified'
+      search?: string
+      bank_nbfc_name?: string
+      location?: string
+      product_type?: string
+      case_status?: string
+    }
+    options?: {
+      include_attachments?: boolean
+      include_form_data?: boolean
+      include_summary?: boolean
+    }
+  }) => {
+    try {
+      console.log('🔍 Sending enhanced export request:', exportData)
+      const response = await api.post('/forms/api/export-enhanced/', exportData, {
+        responseType: 'blob',
+        timeout: 60000 // 60 seconds timeout for large exports
+      })
+      
+      console.log('🔍 Enhanced export response received:', response)
+      
+      // Create download link
+      const blob = new Blob([response.data])
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      
+      // Generate filename
+      const timestamp = new Date().toISOString().split('T')[0]
+      const format = exportData.format
+      a.download = `form_entries_${timestamp}.${format}`
+      
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      return { success: true, message: 'Export completed successfully' }
+    } catch (error) {
+      console.error('Error in enhanced export:', error)
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: unknown, status?: number } }
+        
+        if (errorResponse.response?.status === 400) {
+          throw new Error('Invalid export parameters. Please check your filter settings.')
+        } else if (errorResponse.response?.status === 500) {
+          throw new Error('Server error during export. Please try again later.')
+        }
+      }
+      
+      throw new Error('Failed to export data. Please try again.')
+    }
   },
 
   // Analytics

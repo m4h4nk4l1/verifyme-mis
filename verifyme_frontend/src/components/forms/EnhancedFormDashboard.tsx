@@ -743,6 +743,8 @@ export function EnhancedFormDashboard({
                 <h4 className="font-semibold text-gray-900 mb-2">Entry Information</h4>
                 <div className="space-y-2 text-sm">
                   <div><span className="font-medium">ID:</span> {selectedEntry.id}</div>
+                  <div><span className="font-medium">Entry ID:</span> {selectedEntry.entry_id || 'N/A'}</div>
+                  <div><span className="font-medium">Case ID:</span> {selectedEntry.case_id || 'N/A'}</div>
                   <div><span className="font-medium">Status:</span> 
                     {selectedEntry.is_verified ? 'Verified' : 
                      selectedEntry.is_completed ? 'Completed' : 'Pending'}

@@ -230,16 +230,38 @@ export function FormView({
       // Now create the form entry with all data (including file IDs)
       const entryData = {
         form_schema: selectedSchema.id,
-        form_data: processedFormData, // Now includes file IDs
-        organization: user.organization,
-        employee: user.id
+        form_data: processedFormData // Now includes file IDs
+        // Remove organization and employee - these are set automatically by backend
       }
       
-      // Create the form entry
-      const newEntry = await apiClient.createFormEntry(entryData)
+      // Create the form entry with retry logic
+      let newEntry
+      try {
+        newEntry = await apiClient.createFormEntry(entryData)
+        console.log('🎉 Form submitted successfully:', newEntry)
+        toast.success('Form submitted successfully!')
+      } catch (error: unknown) {
+        console.error('=== FORM SUBMISSION ERROR ===')
+        console.error('Error submitting form:', error)
+        
+        if (error && typeof error === 'object' && 'response' in error) {
+          const errorResponse = error as { response?: { data?: { message?: string, error?: string }, status?: number } }
+          
+          if (errorResponse.response?.data?.message === 'Potential duplicate entry detected') {
+            toast.error('Duplicate entry detected. Please check your data.')
+          } else if (errorResponse.response?.data?.error) {
+            toast.error(errorResponse.response.data.error)
+          } else {
+            toast.error('Failed to submit form. Please try again.')
+          }
+        } else {
+          toast.error('Failed to submit form. Please try again.')
+        }
+      } finally {
+        setSubmitting(false)
+      }
       
-      console.log('🎉 Form submitted successfully:', newEntry)
-      toast.success('Form submitted successfully!')
+      // If we reach here, the form submission was successful
       onEntryCreated?.(newEntry)
       
       // Clean up temporary entries after successful form submission
@@ -274,14 +296,17 @@ export function FormView({
       console.error('Error submitting form:', error)
       
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorResponse = error as { response?: { data?: { message?: string }, status?: number } }
+        const errorResponse = error as { response?: { data?: { message?: string, error?: string }, status?: number } }
+        
         if (errorResponse.response?.data?.message === 'Potential duplicate entry detected') {
           toast.error('Duplicate entry detected. Please check your data.')
+        } else if (errorResponse.response?.data?.error) {
+          toast.error(errorResponse.response.data.error)
         } else {
-          toast.error(`Failed to submit form: ${errorResponse.response?.data?.message || 'Unknown error'}`)
+          toast.error('Failed to submit form. Please try again.')
         }
       } else {
-        toast.error('Failed to submit form')
+        toast.error('Failed to submit form. Please try again.')
       }
     } finally {
       setSubmitting(false)

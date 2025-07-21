@@ -2,6 +2,7 @@
 
 import forms.models
 from django.db import migrations
+from django.db import models
 
 
 class Migration(migrations.Migration):
@@ -14,6 +15,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='formentry',
             name='case_id',
-            field=forms.models.OrganizationAutoIncrementField(blank=True, help_text='Auto-incrementing case ID per organization', null=True),
+            field=models.PositiveIntegerField(blank=True, help_text='Auto-incrementing case ID per organization', null=True),
+        ),
+        migrations.AlterUniqueTogether(
+            name='formentry',
+            unique_together={('organization', 'case_id')},
         ),
     ]

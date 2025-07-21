@@ -101,6 +101,13 @@ export function FormRenderer({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Ensure all boolean fields are present in formData (send false if unchecked)
+    form.fields.forEach(field => {
+      if (field.field_type === 'boolean' && typeof formData[field.name] === 'undefined') {
+        formData[field.name] = false
+      }
+    })
+
     if (!validateForm()) {
       return
     }

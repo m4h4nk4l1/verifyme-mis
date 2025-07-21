@@ -27,6 +27,7 @@ from django.http import HttpResponse
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 import csv
+from django.db import models
 
 from .models import DynamicFormSchema, FormEntry, FormField, FileAttachment, FormFieldFile
 from .serializers import (
@@ -376,110 +377,150 @@ class FormEntryViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """Set organization and employee for new entries, and update file records"""
-        user = self.request.user
-        
-        # Create the form entry
-        if user.role == 'SUPER_ADMIN':
-            # Super admin can create entries for any organization
-            entry = serializer.save(employee=user)
-        elif user.role == 'ADMIN':
-            # Admin can create entries in their organization
-            entry = serializer.save(organization=user.organization)
-        else:
-            # Employees can only create entries for themselves
+        try:
+            user = self.request.user
+            logger.info(f"🔍 Starting form entry creation for user: {user.email}")
+            logger.info(f"🔍 User role: {user.role}")
+            logger.info(f"🔍 User organization: {user.organization}")
+            
+            # Determine case_id: use provided or generate new (max+1 for org)
+            data = serializer.validated_data
+            org = user.organization
+            case_id = data.get('case_id')
+            if not case_id:
+                last_case = FormEntry.objects.filter(organization=org).aggregate(max_id=models.Max('case_id'))['max_id'] or 0
+                case_id = last_case + 1
+            
+            # Create the form entry
             entry = serializer.save(
-                organization=user.organization,
-                employee=user
+                organization=org,
+                employee=user,
+                case_id=case_id
             )
-        
-        # Update file records to point to the final form entry
-        form_data = entry.form_data
-        if form_data:
-            logger.info(f"🔄 Updating file records for form entry: {entry.id}")
-            logger.info(f"📋 Form data: {form_data}")
             
-            # Find file IDs in form data
-            file_ids_to_update = []
-            for field_name, value in form_data.items():
-                if isinstance(value, str) and len(value) > 10 and '-' in value:
-                    # This looks like a UUID - check if it's a file ID
+            logger.info(f"✅ Form entry created successfully: {entry.id}")
+            logger.info(f"✅ Entry ID: {entry.entry_id}")
+            logger.info(f"✅ Case ID: {entry.case_id}")
+            logger.info(f"✅ Form schema: {entry.form_schema}")
+            
+            # Update file records to point to the final form entry
+            form_data = entry.form_data
+            if form_data:
+                logger.info(f"🔄 Updating file records for form entry: {entry.id}")
+                logger.info(f"📋 Form data: {form_data}")
+                
+                # Find file IDs in form data
+                file_ids_to_update = []
+                for field_name, value in form_data.items():
+                    if isinstance(value, str) and len(value) > 10 and '-' in value:
+                        # This looks like a UUID - check if it's a file ID
+                        try:
+                            # Try to find a FormFieldFile with this ID
+                            file_obj = FormFieldFile.objects.filter(id=value).first()
+                            if file_obj:
+                                file_ids_to_update.append((value, field_name))
+                                logger.info(f"📎 Found file ID to update: {value} for field {field_name}")
+                                logger.info(f"📎 Current file entry: {file_obj.form_entry}, field: {file_obj.field_name}")
+                            else:
+                                logger.warning(f"⚠️ File ID {value} not found in database")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Error checking file ID {value}: {str(e)}")
+                
+                logger.info(f"📋 Total files to update: {len(file_ids_to_update)}")
+                
+                # Update file records
+                updated_count = 0
+                for file_id, field_name in file_ids_to_update:
                     try:
-                        # Try to find a FormFieldFile with this ID
-                        file_obj = FormFieldFile.objects.filter(id=value).first()
-                        if file_obj:
-                            file_ids_to_update.append((value, field_name))
-                            logger.info(f"📎 Found file ID to update: {value} for field {field_name}")
-                            logger.info(f"📎 Current file entry: {file_obj.form_entry}, field: {file_obj.field_name}")
-                        else:
-                            logger.warning(f"⚠️ File ID {value} not found in database")
+                        file_obj = FormFieldFile.objects.get(id=file_id)
+                        logger.info(f"🔄 Updating file {file_id}:")
+                        logger.info(f"   - Old form_entry: {file_obj.form_entry}")
+                        logger.info(f"   - Old field_name: {file_obj.field_name}")
+                        logger.info(f"   - New form_entry: {entry.id}")
+                        logger.info(f"   - New field_name: {field_name}")
+                        
+                        file_obj.form_entry = entry
+                        file_obj.field_name = field_name
+                        file_obj.is_temporary = False  # Mark as permanent
+                        file_obj.save()
+                        
+                        logger.info(f"✅ Updated file {file_id} to point to form entry {entry.id}")
+                        updated_count += 1
+                        
+                        # Verify the update
+                        updated_file = FormFieldFile.objects.get(id=file_id)
+                        logger.info(f"✅ Verification - File {file_id} now points to entry {updated_file.form_entry}")
+                        
+                    except FormFieldFile.DoesNotExist:
+                        logger.warning(f"⚠️ File {file_id} not found")
                     except Exception as e:
-                        logger.warning(f"⚠️ Error checking file ID {value}: {str(e)}")
+                        logger.error(f"❌ Error updating file {file_id}: {str(e)}")
+                        import traceback
+                        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+                
+                logger.info(f"✅ Successfully updated {updated_count} out of {len(file_ids_to_update)} files")
+            else:
+                logger.info("📋 No form data to process for file updates")
             
-            logger.info(f"📋 Total files to update: {len(file_ids_to_update)}")
-            
-            # Update file records
-            updated_count = 0
-            for file_id, field_name in file_ids_to_update:
-                try:
-                    file_obj = FormFieldFile.objects.get(id=file_id)
-                    logger.info(f"🔄 Updating file {file_id}:")
-                    logger.info(f"   - Old form_entry: {file_obj.form_entry}")
-                    logger.info(f"   - Old field_name: {file_obj.field_name}")
-                    logger.info(f"   - New form_entry: {entry.id}")
-                    logger.info(f"   - New field_name: {field_name}")
-                    
-                    file_obj.form_entry = entry
-                    file_obj.field_name = field_name
-                    file_obj.is_temporary = False  # Mark as permanent
-                    file_obj.save()
-                    
-                    logger.info(f"✅ Updated file {file_id} to point to form entry {entry.id}")
-                    updated_count += 1
-                    
-                    # Verify the update
-                    updated_file = FormFieldFile.objects.get(id=file_id)
-                    logger.info(f"✅ Verification - File {file_id} now points to entry {updated_file.form_entry}")
-                    
-                except FormFieldFile.DoesNotExist:
-                    logger.warning(f"⚠️ File {file_id} not found")
-                except Exception as e:
-                    logger.error(f"❌ Error updating file {file_id}: {str(e)}")
-                    import traceback
-                    logger.error(f"❌ Traceback: {traceback.format_exc()}")
-            
-            logger.info(f"✅ Successfully updated {updated_count} out of {len(file_ids_to_update)} files")
-        
-        return entry
+            logger.info(f"✅ Form entry creation completed successfully: {entry.id}")
+            return entry
+        except Exception as e:
+            logger.error(f"❌ Error in create method: {str(e)}")
+            import traceback
+            logger.error(f"❌ Full traceback: {traceback.format_exc()}")
+            return Response(
+                {'error': 'Failed to create form entry. Please try again.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def create(self, request, *args, **kwargs):
-        """Create a new form entry with duplicate detection"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        # Temporarily disable duplicate detection for testing
-        # TODO: Re-enable with better logic later
-        """
-        # Check for duplicates based on form data - only check for exact duplicates
-        form_data = serializer.validated_data.get('form_data', {})
-        form_schema = serializer.validated_data.get('form_schema')
-        
-        if form_data and form_schema:
-            # Look for exact duplicates only (same form_data exactly)
-            duplicates = FormEntry.objects.filter(
-                form_schema=form_schema,
-                form_data=form_data  # Exact match instead of contains
-            )
+        """Create a new form entry with enhanced error handling"""
+        try:
+            logger.info(f"🔍 Form entry creation request from user: {request.user.email}")
+            logger.info(f"🔍 Request method: {request.method}")
+            logger.info(f"🔍 Request path: {request.path}")
+            logger.info(f"🔍 Request data: {request.data}")
+            logger.info(f"🔍 Request content type: {request.content_type}")
+            logger.info(f"🔍 Request headers: {dict(request.headers)}")
             
-            if duplicates.exists():
-                return Response({
-                    'message': 'Potential duplicate entry detected',
-                    'duplicates': FormEntrySerializer(duplicates, many=True).data
-                }, status=status.HTTP_409_CONFLICT)
-        """
-        
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            serializer = self.get_serializer(data=request.data)
+            
+            logger.info(f"🔍 Serializer created successfully")
+            
+            if not serializer.is_valid():
+                logger.error(f"❌ Serializer validation failed: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            logger.info(f"✅ Serializer validation passed")
+            
+            # Create the entry
+            entry = self.perform_create(serializer)
+            # Only log entry.id if entry is a model instance
+            if hasattr(entry, 'id'):
+                logger.info(f"✅ Form entry created successfully: {entry.id}")
+            else:
+                logger.info(f"✅ Form entry created successfully (no id available)")
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            
+        except Exception as e:
+            logger.error(f"❌ Error in create method: {str(e)}")
+            import traceback
+            logger.error(f"❌ Full traceback: {traceback.format_exc()}")
+            
+            # Handle specific database constraint errors
+            if "duplicate key value violates unique constraint" in str(e) and "case_id" in str(e):
+                logger.error("❌ Case ID conflict detected - this should not happen with new system")
+                logger.error("❌ This indicates a bug in the case_id generation system")
+                return Response(
+                    {'error': 'Internal error with case ID generation. Please try again.'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            return Response(
+                {'error': 'Failed to create form entry. Please try again.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):
@@ -1188,6 +1229,36 @@ class FormEntryViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(entry)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def test(self, request):
+        """Test endpoint to verify the viewset is working"""
+        logger.info(f"🔍 Test endpoint called by user: {request.user.email}")
+        return Response({'message': 'Test endpoint working', 'user': request.user.email})
+    
+    @action(detail=False, methods=['post'])
+    def test_create(self, request):
+        """Test create endpoint with minimal data"""
+        logger.info(f"🔍 Test create called by user: {request.user.email}")
+        logger.info(f"🔍 Test create data: {request.data}")
+        
+        try:
+            # Try to create with minimal data
+            test_data = {
+                'form_schema': request.data.get('form_schema'),
+                'form_data': request.data.get('form_data', {})
+            }
+            
+            serializer = self.get_serializer(data=test_data)
+            if serializer.is_valid():
+                entry = self.perform_create(serializer)
+                return Response({'message': 'Test create successful', 'entry_id': entry.id})
+            else:
+                return Response({'message': 'Test create failed', 'errors': serializer.errors})
+                
+        except Exception as e:
+            logger.error(f"❌ Test create error: {str(e)}")
+            return Response({'message': 'Test create error', 'error': str(e)})
 
 class FormFieldViewSet(viewsets.ModelViewSet):
     """ViewSet for FormField management"""
@@ -2223,3 +2294,398 @@ class FormEntryExportView(APIView):
                 if row == 1:
                     cell.font = Font(bold=True)
                     cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+
+class EnhancedFormEntryExportView(APIView):
+    """
+    Enhanced export functionality for form entries with advanced filtering
+    Supports Excel, PDF, and CSV with date range filtering and case ID tracking
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Export form entries with advanced filtering"""
+        user = request.user
+        export_format = request.data.get('format', 'excel')
+        filters = request.data.get('filters', {})
+        options = request.data.get('options', {})
+        
+        logger.info(f"Enhanced export request from user {user.email}: format={export_format}, filters={filters}")
+        
+        # Get filtered entries
+        if user.role == 'SUPER_ADMIN':
+            organization = None
+        else:
+            organization = user.organization
+        
+        entries = self.get_filtered_entries(filters, organization)
+        logger.info(f"Found {entries.count()} entries for export")
+        
+        # Generate filename with date range
+        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        date_range = self.get_date_range_text(filters)
+        file_name = f"form_entries_{date_range}_{timestamp}"
+        
+        if export_format == 'excel':
+            return self.export_to_excel(entries, options, file_name)
+        elif export_format == 'pdf':
+            return self.export_to_pdf(entries, options, file_name)
+        elif export_format == 'csv':
+            return self.export_to_csv(entries, options, file_name)
+        else:
+            return Response({'error': 'Unsupported export format'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_date_range_text(self, filters):
+        """Generate date range text for filename"""
+        date_range = filters.get('date_range', 'all')
+        custom_start_date = filters.get('custom_start_date')
+        custom_end_date = filters.get('custom_end_date')
+        
+        if date_range == 'custom' and custom_start_date and custom_end_date:
+            return f"{custom_start_date}_to_{custom_end_date}"
+        elif date_range in ['last_7_days', 'last_30_days', 'last_90_days']:
+            return date_range.replace('_', '-')
+        else:
+            return 'all-time'
+    
+    def get_filtered_entries(self, filters, organization):
+        """Get filtered entries with enhanced date range support"""
+        queryset = FormEntry.objects.all()
+        
+        # Filter by organization
+        if organization:
+            queryset = queryset.filter(organization=organization)
+        
+        # Enhanced date range filtering
+        date_range = filters.get('date_range', 'all')
+        custom_start_date = filters.get('custom_start_date')
+        custom_end_date = filters.get('custom_end_date')
+        
+        if date_range == 'last_7_days':
+            start_date = timezone.now() - timedelta(days=7)
+            queryset = queryset.filter(created_at__gte=start_date)
+        elif date_range == 'last_30_days':
+            start_date = timezone.now() - timedelta(days=30)
+            queryset = queryset.filter(created_at__gte=start_date)
+        elif date_range == 'last_90_days':
+            start_date = timezone.now() - timedelta(days=90)
+            queryset = queryset.filter(created_at__gte=start_date)
+        elif date_range == 'custom' and custom_start_date and custom_end_date:
+            try:
+                start_date = datetime.strptime(custom_start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                end_date = datetime.strptime(custom_end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc) + timedelta(days=1)
+                queryset = queryset.filter(created_at__gte=start_date, created_at__lt=end_date)
+                logger.info(f"Custom date range: {start_date} to {end_date}")
+            except ValueError as e:
+                logger.error(f"Invalid date format: {e}")
+        
+        # Case ID range filtering
+        if filters.get('case_id_from'):
+            try:
+                case_id_from = int(filters['case_id_from'])
+                queryset = queryset.filter(case_id__gte=case_id_from)
+            except ValueError:
+                logger.error(f"Invalid case_id_from: {filters['case_id_from']}")
+        
+        if filters.get('case_id_to'):
+            try:
+                case_id_to = int(filters['case_id_to'])
+                queryset = queryset.filter(case_id__lte=case_id_to)
+            except ValueError:
+                logger.error(f"Invalid case_id_to: {filters['case_id_to']}")
+        
+        # Additional filters
+        if filters.get('form_schema'):
+            queryset = queryset.filter(form_schema_id=filters['form_schema'])
+        
+        if filters.get('status'):
+            status_filter = filters['status']
+            if status_filter == 'completed':
+                queryset = queryset.filter(is_completed=True)
+            elif status_filter == 'verified':
+                queryset = queryset.filter(is_verified=True)
+            elif status_filter == 'pending':
+                queryset = queryset.filter(is_completed=False, is_verified=False)
+        
+        if filters.get('search'):
+            search_term = filters['search']
+            queryset = queryset.filter(
+                Q(employee__first_name__icontains=search_term) |
+                Q(employee__last_name__icontains=search_term) |
+                Q(form_schema__name__icontains=search_term) |
+                Q(form_data__icontains=search_term) |
+                Q(case_id__icontains=search_term)
+            )
+        
+        # Business field filters
+        if filters.get('bank_nbfc_name'):
+            queryset = queryset.filter(form_data__bank_nbfc_name__icontains=filters['bank_nbfc_name'])
+        
+        if filters.get('location'):
+            queryset = queryset.filter(form_data__location__icontains=filters['location'])
+        
+        if filters.get('product_type'):
+            queryset = queryset.filter(form_data__product_type__icontains=filters['product_type'])
+        
+        if filters.get('case_status'):
+            queryset = queryset.filter(form_data__case_status__icontains=filters['case_status'])
+        
+        return queryset.select_related('employee', 'form_schema', 'organization')
+    
+    def export_to_excel(self, entries, options, file_name):
+        """Export to Excel with enhanced formatting and case ID tracking"""
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Form Entries"
+        
+        # Define styles
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Headers
+        headers = [
+            "Case ID", "Organization", "Employee", "Form Schema", "Status", 
+            "Created Date", "Completed Date", "Verified Date", "TAT Status",
+            "Bank/NBFC", "Location", "Product Type", "Case Status",
+            "Field Verifier", "Back Office Executive", "Repeat Case",
+            "Form Data", "Verification Notes", "File Attachments"
+        ]
+        
+        # Write headers
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+        
+        # Write data
+        for row, entry in enumerate(entries, 2):
+            # Get form data
+            form_data = entry.form_data or {}
+            
+            # Get file attachments
+            attachments = entry.attachments.all()
+            attachment_links = []
+            for attachment in attachments:
+                if hasattr(attachment, 'file') and attachment.file:
+                    # Try to get S3 URL
+                    try:
+                        s3_url = S3FileManager.get_presigned_url(attachment.file.name)
+                        attachment_links.append(f"{attachment.original_filename}: {s3_url}")
+                    except:
+                        attachment_links.append(f"{attachment.original_filename}: File not accessible")
+            
+            row_data = [
+                entry.case_id or "N/A",
+                entry.organization.display_name if entry.organization else "N/A",
+                f"{entry.employee.first_name} {entry.employee.last_name}" if entry.employee else "N/A",
+                entry.form_schema.name if entry.form_schema else "N/A",
+                self.get_status_text(entry),
+                entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else "N/A",
+                entry.tat_completion_time.strftime('%Y-%m-%d %H:%M:%S') if entry.tat_completion_time else "N/A",
+                entry.verified_at.strftime('%Y-%m-%d %H:%M:%S') if entry.verified_at else "N/A",
+                "Out of TAT" if entry.is_out_of_tat else "Within TAT",
+                form_data.get('bank_nbfc_name', 'N/A'),
+                form_data.get('location', 'N/A'),
+                form_data.get('product_type', 'N/A'),
+                form_data.get('case_status', 'N/A'),
+                form_data.get('field_verifier_name', 'N/A'),
+                form_data.get('back_office_executive_name', 'N/A'),
+                "Yes" if form_data.get('is_repeat_case') else "No",
+                json.dumps(form_data, indent=2) if form_data else "N/A",
+                entry.verification_notes or "N/A",
+                "; ".join(attachment_links) if attachment_links else "No attachments"
+            ]
+            
+            for col, value in enumerate(row_data, 1):
+                ws.cell(row=row, column=col, value=value)
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = get_column_letter(column[0].column)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Create summary sheet
+        self.create_summary_sheet(wb, entries)
+        
+        # Save to BytesIO
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{file_name}.xlsx"'
+        return response
+    
+    def export_to_pdf(self, entries, options, file_name):
+        """Export to PDF with enhanced formatting"""
+        doc = SimpleDocTemplate(
+            BytesIO(),
+            pagesize=A4,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        story.append(Paragraph(f"Form Entries Report - {file_name}", title_style))
+        story.append(Spacer(1, 12))
+        
+        # Summary
+        summary_style = ParagraphStyle(
+            'Summary',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=20
+        )
+        story.append(Paragraph(f"Total Entries: {entries.count()}", summary_style))
+        story.append(Paragraph(f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}", summary_style))
+        story.append(Spacer(1, 20))
+        
+        # Table data
+        table_data = [['Case ID', 'Employee', 'Status', 'Created', 'Bank/NBFC', 'Location']]
+        
+        for entry in entries:
+            form_data = entry.form_data or {}
+            table_data.append([
+                str(entry.case_id or "N/A"),
+                f"{entry.employee.first_name} {entry.employee.last_name}" if entry.employee else "N/A",
+                self.get_status_text(entry),
+                entry.created_at.strftime('%Y-%m-%d') if entry.created_at else "N/A",
+                form_data.get('bank_nbfc_name', 'N/A'),
+                form_data.get('location', 'N/A')
+            ])
+        
+        # Create table
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(table)
+        
+        # Build PDF
+        doc.build(story)
+        pdf_content = doc.getvalue()
+        
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
+        return response
+    
+    def export_to_csv(self, entries, options, file_name):
+        """Export to CSV with enhanced data"""
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}.csv"'
+        
+        writer = csv.writer(response)
+        
+        # Headers
+        headers = [
+            "Case ID", "Organization", "Employee", "Form Schema", "Status", 
+            "Created Date", "Completed Date", "Verified Date", "TAT Status",
+            "Bank/NBFC", "Location", "Product Type", "Case Status",
+            "Field Verifier", "Back Office Executive", "Repeat Case",
+            "Verification Notes"
+        ]
+        writer.writerow(headers)
+        
+        # Data
+        for entry in entries:
+            form_data = entry.form_data or {}
+            row = [
+                entry.case_id or "N/A",
+                entry.organization.display_name if entry.organization else "N/A",
+                f"{entry.employee.first_name} {entry.employee.last_name}" if entry.employee else "N/A",
+                entry.form_schema.name if entry.form_schema else "N/A",
+                self.get_status_text(entry),
+                entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else "N/A",
+                entry.tat_completion_time.strftime('%Y-%m-%d %H:%M:%S') if entry.tat_completion_time else "N/A",
+                entry.verified_at.strftime('%Y-%m-%d %H:%M:%S') if entry.verified_at else "N/A",
+                "Out of TAT" if entry.is_out_of_tat else "Within TAT",
+                form_data.get('bank_nbfc_name', 'N/A'),
+                form_data.get('location', 'N/A'),
+                form_data.get('product_type', 'N/A'),
+                form_data.get('case_status', 'N/A'),
+                form_data.get('field_verifier_name', 'N/A'),
+                form_data.get('back_office_executive_name', 'N/A'),
+                "Yes" if form_data.get('is_repeat_case') else "No",
+                entry.verification_notes or "N/A"
+            ]
+            writer.writerow(row)
+        
+        return response
+    
+    def get_status_text(self, entry):
+        """Get status text for entry"""
+        if entry.is_verified:
+            return "Verified"
+        elif entry.is_completed:
+            return "Completed"
+        else:
+            return "Pending"
+    
+    def create_summary_sheet(self, wb, entries):
+        """Create summary sheet with analytics"""
+        ws = wb.create_sheet("Summary")
+        
+        # Summary statistics
+        total_entries = entries.count()
+        completed_entries = entries.filter(is_completed=True).count()
+        verified_entries = entries.filter(is_verified=True).count()
+        pending_entries = entries.filter(is_completed=False, is_verified=False).count()
+        
+        # Write summary
+        ws['A1'] = "Form Entries Summary"
+        ws['A1'].font = Font(bold=True, size=14)
+        
+        ws['A3'] = "Total Entries"
+        ws['B3'] = total_entries
+        
+        ws['A4'] = "Completed"
+        ws['B4'] = completed_entries
+        
+        ws['A5'] = "Verified"
+        ws['B5'] = verified_entries
+        
+        ws['A6'] = "Pending"
+        ws['B6'] = pending_entries
+        
+        # Calculate percentages
+        if total_entries > 0:
+            ws['A8'] = "Completion Rate"
+            ws['B8'] = f"{(completed_entries/total_entries)*100:.1f}%"
+            
+            ws['A9'] = "Verification Rate"
+            ws['B9'] = f"{(verified_entries/total_entries)*100:.1f}%"

@@ -50,21 +50,88 @@ export function EmployeeManagement({ organizationId }: EmployeeManagementProps) 
 
   const handleCreateEmployee = async (employeeData: Partial<UserType>) => {
     try {
-      await apiClient.createEmployee(employeeData)
-      setShowCreateModal(false)
-      fetchEmployees()
+      console.log('🔍 Creating employee with data:', employeeData);
+      
+      // Ensure required fields are present
+      const createData = {
+        email: employeeData.email,
+        username: employeeData.username,
+        first_name: employeeData.first_name,
+        last_name: employeeData.last_name,
+        phone: employeeData.phone || '',
+        password: employeeData.password,
+        confirm_password: employeeData.confirm_password,
+        employee_data: employeeData.employee_data || {}
+      };
+      
+      console.log('🔍 Structured create data:', createData);
+      await apiClient.createEmployee(createData);
+      setShowCreateModal(false);
+      fetchEmployees();
+      
+      // Show success message
+      alert('Employee created successfully!');
     } catch (error) {
-      console.error('Error creating employee:', error)
+      console.error('Error creating employee:', error);
+      // Handle validation errors
+      if (error instanceof Error) {
+        try {
+          const errorData = JSON.parse(error.message);
+          console.error('Validation errors:', errorData);
+          
+          // Display user-friendly error messages
+          let errorMessage = 'Failed to create employee:\n';
+          if (errorData.email) {
+            errorMessage += `• Email: ${errorData.email[0]}\n`;
+          }
+          if (errorData.username) {
+            errorMessage += `• Username: ${errorData.username[0]}\n`;
+          }
+          if (errorData.password) {
+            errorMessage += `• Password: ${errorData.password[0]}\n`;
+          }
+          if (errorData.non_field_errors) {
+            errorMessage += `• ${errorData.non_field_errors[0]}\n`;
+          }
+          
+          alert(errorMessage);
+        } catch {
+          console.error('Non-validation error:', error.message);
+          alert('Failed to create employee. Please try again.');
+        }
+      }
     }
   }
 
   const handleUpdateEmployee = async (employeeId: string, employeeData: Partial<UserType>) => {
     try {
-      await apiClient.updateEmployee(employeeId, employeeData)
-      setEditingEmployee(null)
-      fetchEmployees()
+      console.log('🔍 Updating employee with data:', employeeData);
+      
+      // Only send fields that can be updated
+      const updateData = {
+        first_name: employeeData.first_name,
+        last_name: employeeData.last_name,
+        phone: employeeData.phone,
+        employee_data: employeeData.employee_data,
+        is_active: employeeData.is_active
+      };
+      
+      console.log('🔍 Structured update data:', updateData);
+      await apiClient.updateEmployee(employeeId, updateData);
+      setEditingEmployee(null);
+      fetchEmployees();
     } catch (error) {
-      console.error('Error updating employee:', error)
+      console.error('Error updating employee:', error);
+      // Handle validation errors
+      if (error instanceof Error) {
+        try {
+          const errorData = JSON.parse(error.message);
+          console.error('Validation errors:', errorData);
+          // You can show these errors to the user
+        } catch {
+          console.error('Non-validation error:', error.message);
+        }
+      }
     }
   }
 
@@ -104,7 +171,7 @@ export function EmployeeManagement({ organizationId }: EmployeeManagementProps) 
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Employee Management</h2>
-          <p className="text-gray-600">Manage your organization's employees</p>
+          <p className="text-gray-600">Manage your organization&apos;s employees</p>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
@@ -288,7 +355,35 @@ function EmployeeModal({ employee, onClose, onSubmit }: EmployeeModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    
+    // If creating new employee, generate unique username and email if not provided
+    if (!employee) {
+      const updatedData = { ...formData }
+      
+      if (!updatedData.username && updatedData.first_name && updatedData.last_name) {
+        updatedData.username = generateUniqueUsername(updatedData.first_name, updatedData.last_name)
+      }
+      
+      if (!updatedData.email && updatedData.first_name && updatedData.last_name) {
+        updatedData.email = generateUniqueEmail(updatedData.first_name, updatedData.last_name)
+      }
+      
+      onSubmit(updatedData)
+    } else {
+      onSubmit(formData)
+    }
+  }
+
+  const generateUniqueUsername = (firstName: string, lastName: string) => {
+    const baseUsername = `${firstName.toLowerCase()}${lastName.toLowerCase()}`
+    const timestamp = Date.now().toString().slice(-4)
+    return `${baseUsername}${timestamp}`
+  }
+
+  const generateUniqueEmail = (firstName: string, lastName: string) => {
+    const baseEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`
+    const timestamp = Date.now().toString().slice(-4)
+    return `${baseEmail}${timestamp}@example.com`
   }
 
   return (

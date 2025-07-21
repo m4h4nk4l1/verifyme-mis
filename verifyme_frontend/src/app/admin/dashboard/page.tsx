@@ -32,7 +32,7 @@ import {
   UserCheck,
   Upload
 } from 'lucide-react'
-import { FormEntry, FormEntryStatistics, OrganizationStatistics, FormSchema } from '@/types/api'
+import { FormEntry, FormEntryStatistics, OrganizationStatistics, FormSchema, FormField } from '@/types/api'
 import { apiClient } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -150,30 +150,30 @@ export default function AdminDashboard() {
 
   const handleEntrySelect = async (entry: FormEntry) => {
     try {
-      // Fetch the form schema for this entry
-      const schemaResponse = await apiClient.getFormSchema(entry.form_schema)
-      setSelectedSchema(schemaResponse)
-      setSelectedEntry(entry)
-      setShowViewModal(true)
+      const schemaId = typeof entry.form_schema === 'string' ? entry.form_schema : entry.form_schema?.id;
+      const schemaResponse = await apiClient.getFormSchema(schemaId);
+      setSelectedSchema(schemaResponse);
+      setSelectedEntry(entry);
+      setShowViewModal(true);
     } catch (error) {
-      console.error('Error fetching form schema:', error)
-      toast.error('Failed to load form details')
+      console.error('Error fetching form schema:', error);
+      toast.error('Failed to load form details');
     }
-  }
+  };
 
   const handleEntryEdit = async (entry: FormEntry) => {
     try {
-      // Fetch the form schema for this entry
-      const schemaResponse = await apiClient.getFormSchema(entry.form_schema)
-      setSelectedSchema(schemaResponse)
-      setSelectedEntry(entry)
-      setEditFormData(entry.form_data || {})
-      setShowEditModal(true)
+      const schemaId = typeof entry.form_schema === 'string' ? entry.form_schema : entry.form_schema?.id;
+      const schemaResponse = await apiClient.getFormSchema(schemaId);
+      setSelectedSchema(schemaResponse);
+      setSelectedEntry(entry);
+      setEditFormData(entry.form_data || {});
+      setShowEditModal(true);
     } catch (error) {
-      console.error('Error fetching form schema:', error)
-      toast.error('Failed to load form details')
+      console.error('Error fetching form schema:', error);
+      toast.error('Failed to load form details');
     }
-  }
+  };
 
   const handleEntryDelete = async (entry: FormEntry) => {
     if (confirm('Are you sure you want to delete this entry?')) {
@@ -220,8 +220,11 @@ export default function AdminDashboard() {
       // Handle file uploads first
       const updatedFormData = { ...editFormData }
       
+      // Ensure fields_definition is typed as FormField[]
+      const fields: FormField[] = selectedSchema?.fields_definition || [];
+      
       for (const [fieldName, value] of Object.entries(editFormData)) {
-        const field = selectedSchema?.fields_definition?.find(f => f.name === fieldName)
+        const field = fields.find((f) => f.name === fieldName)
         
         if (field && (field.field_type === 'IMAGE_UPLOAD' || field.field_type === 'DOCUMENT_UPLOAD') && value instanceof File) {
           try {
@@ -362,49 +365,78 @@ export default function AdminDashboard() {
     }
   }
 
-  // Get field value with file handling
+  // Replace the getFieldValue function with the robust version from EmployeeDashboard
   const getFieldValue = (entry: FormEntry, fieldName: string) => {
-    if (entry.form_data && entry.form_data[fieldName]) {
-      const value = entry.form_data[fieldName];
-      
-      // Check if this is a file field (by field name)
-      const isFileField = fieldName.toLowerCase().includes('image') || 
-                         fieldName.toLowerCase().includes('doc') || 
-                         fieldName.toLowerCase().includes('file') ||
-                         fieldName.toLowerCase().includes('upload');
-      
-      if (isFileField && typeof value === 'string') {
-        // This is likely a file ID - check if we have file info
-        console.log(`🔍 Processing file field: ${fieldName} = ${value}`);
-        const file = fileInfo[value] as any;
-        if (file && file.file_url) {
-          return (
-            <a 
-              href={file.file_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline"
-            >
-              📎 {(file as any).original_filename || 'View File'}
-            </a>
-          );
-        } else if (file === null) {
-          // File was fetched but doesn't exist
-          return <span className="text-gray-500">📎 File not found</span>;
-        } else {
-          // Fetch file info asynchronously
-          fetchFileInfo(value);
-          return <span className="text-gray-400">📎 Loading...</span>;
-        }
+    const dataToUse = entry.filtered_form_data || entry.form_data;
+    const value = dataToUse?.[fieldName];
+
+    if (value === undefined || value === null) return 'N/A';
+
+    // Handle file fields - check if it's a file ID (UUID format)
+    if (typeof value === 'string' && value.length === 36 && value.includes('-')) {
+      const file = fileInfo[value];
+      if (file && typeof file === 'object' && 'file_url' in file) {
+        return (
+          <a 
+            href={(file as { file_url: string }).file_url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            📎 {(file as { original_filename?: string }).original_filename || 'View File'}
+          </a>
+        );
+      } else {
+        fetchFileInfo(value);
+        return '📎 Loading...';
       }
-      
-      if (typeof value === 'string' || typeof value === 'number') {
-        return value.toString();
-      }
-      return 'N/A';
     }
-    return 'N/A';
-  };
+
+    // Handle S3 URLs directly
+    if (typeof value === 'string' && value.startsWith('http')) {
+      if (value.includes('s3.amazonaws.com') || 
+          value.includes('verifyme-mis-files') ||
+          value.includes('amazonaws.com')) {
+        return (
+          <a 
+            href={value} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            📎 View File
+          </a>
+        );
+      }
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      return value.toString();
+    }
+
+    if (typeof value === 'object') {
+      if (value && typeof value === 'object' && 'file_url' in value) {
+        return (
+          <a 
+            href={(value as { file_url: string }).file_url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            📎 {(value as { original_filename?: string }).original_filename || 'View File'}
+          </a>
+        );
+      }
+      return JSON.stringify(value);
+    }
+
+    return String(value);
+  }
 
   // Get all unique field names across all schemas
   const getAllFieldNames = () => {
@@ -747,6 +779,8 @@ export default function AdminDashboard() {
                           <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Form Schema</TableHead>
                           <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">TAT Status</TableHead>
                           <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Submitted</TableHead>
+                          <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Entry ID</TableHead>
+                          <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Case ID</TableHead>
                           {/* Dynamic form field columns */}
                           {showFormFields && getAllFieldNames().map((fieldName) => (
                             <TableHead key={fieldName} className="min-w-[180px] text-lg font-bold text-gray-800 py-4 px-6">
@@ -759,7 +793,7 @@ export default function AdminDashboard() {
                       <TableBody>
                         {formEntries.length === 0 && !entriesLoading ? (
                           <TableRow>
-                            <TableCell colSpan={6 + (showFormFields ? getAllFieldNames().length : 0)} className="py-12 text-center">
+                            <TableCell colSpan={8 + (showFormFields ? getAllFieldNames().length : 0)} className="py-12 text-center">
                               <div className="flex flex-col items-center gap-4">
                                 <FileText className="h-12 w-12 text-gray-400" />
                                 <div className="text-lg font-semibold text-gray-600">No entries found</div>
@@ -802,6 +836,16 @@ export default function AdminDashboard() {
                             <TableCell className="py-4 px-6">
                               <div className="font-semibold text-gray-900">
                                 {formatDate(entry.created_at)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4 px-6">
+                              <div className="font-semibold text-gray-900">
+                                {entry.entry_id || 'N/A'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4 px-6">
+                              <div className="font-semibold text-gray-900">
+                                {entry.case_id || 'N/A'}
                               </div>
                             </TableCell>
                             {/* Dynamic form field values */}
@@ -1040,6 +1084,8 @@ export default function AdminDashboard() {
                     <div><span className="font-medium">Form Schema:</span> 
                       {selectedSchema.name}
                     </div>
+                    <div><span className="font-medium">Entry ID:</span> {selectedEntry.entry_id !== undefined && selectedEntry.entry_id !== null ? selectedEntry.entry_id : 'N/A'}</div>
+                    <div><span className="font-medium">Case ID:</span> {selectedEntry.case_id || 'N/A'}</div>
                   </div>
                 </div>
                 
@@ -1102,6 +1148,8 @@ export default function AdminDashboard() {
                     <div><span className="font-medium">Form Schema:</span> 
                       {selectedSchema.name}
                     </div>
+                    <div><span className="font-medium">Entry ID:</span> {selectedEntry.entry_id !== undefined && selectedEntry.entry_id !== null ? selectedEntry.entry_id : 'N/A'}</div>
+                    <div><span className="font-medium">Case ID:</span> {selectedEntry.case_id || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -1120,7 +1168,7 @@ export default function AdminDashboard() {
                       {field.field_type === 'IMAGE_UPLOAD' || field.field_type === 'DOCUMENT_UPLOAD' ? (
                         <div className="space-y-3">
                           {/* Show current file if exists */}
-                          {editFormData[field.name] && (editFormData[field.name] as any) && (
+                          {editFormData[field.name] && (editFormData[field.name] as unknown as { file_url?: string }) && (
                             <div className="p-3 border border-gray-200 rounded-md bg-gray-50">
                               <div className="flex items-center space-x-2">
                                 {field.field_type === 'IMAGE_UPLOAD' ? (
@@ -1166,7 +1214,7 @@ export default function AdminDashboard() {
                                 Choose {field.field_type === 'IMAGE_UPLOAD' ? 'Image' : 'Document'}
                               </span>
                             </label>
-                            {editFormData[field.name] && (editFormData[field.name] as any) && (
+                            {editFormData[field.name] && (editFormData[field.name] as unknown as { file_url?: string }) && (
                               <Button
                                 type="button"
                                 variant="outline"

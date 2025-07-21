@@ -7,7 +7,8 @@ from .views import (
     FileAttachmentViewSet, 
     FormFieldFileViewSet, 
     FormEntryExportView,
-    FormEntryUploadView
+    FormEntryUploadView,
+    EnhancedFormEntryExportView
 )
 
 # Create router and register viewsets
@@ -38,6 +39,7 @@ urlpatterns = [
     
     # Export functionality
     path('api/export/', FormEntryExportView.as_view(), name='form-entry-export'),
+    path('api/export-enhanced/', EnhancedFormEntryExportView.as_view(), name='enhanced-form-entry-export'),
     
     # Statistics endpoints
     path('api/schemas/statistics/', DynamicFormSchemaViewSet.as_view({'get': 'statistics'}), name='schema-statistics'),
