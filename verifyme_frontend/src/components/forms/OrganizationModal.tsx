@@ -24,6 +24,7 @@ export function OrganizationModal({ isOpen, onClose, organization, onSuccess }: 
     phone: '',
     business_type: '',
     is_active: true,
+    address_data: '',
     // Admin user fields
     admin_email: '',
     admin_username: '',
@@ -42,6 +43,7 @@ export function OrganizationModal({ isOpen, onClose, organization, onSuccess }: 
         phone: organization.phone || '',
         business_type: organization.business_type || '',
         is_active: organization.is_active ?? true,
+        address_data: organization.address_data || '',
         // Admin fields not needed for editing
         admin_email: '',
         admin_username: '',
@@ -57,6 +59,7 @@ export function OrganizationModal({ isOpen, onClose, organization, onSuccess }: 
         phone: '',
         business_type: '',
         is_active: true,
+        address_data: '',
         admin_email: '',
         admin_username: '',
         admin_first_name: '',
@@ -73,7 +76,15 @@ export function OrganizationModal({ isOpen, onClose, organization, onSuccess }: 
     try {
       if (organization) {
         // For editing, only send organization fields
-        const { admin_email, admin_username, admin_first_name, admin_last_name, admin_password, ...orgData } = formData
+        const orgData = {
+          name: formData.name,
+          display_name: formData.display_name,
+          email: formData.email,
+          phone: formData.phone,
+          business_type: formData.business_type,
+          is_active: formData.is_active,
+          address_data: formData.address_data
+        }
         await apiClient.updateOrganization(organization.id, orgData)
         toast.success('Organization updated successfully')
       } else {

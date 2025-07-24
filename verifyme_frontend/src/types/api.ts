@@ -40,7 +40,7 @@ export interface FormField {
   id: string
   name: string
   display_name: string
-  field_type: 'NUMERIC' | 'STRING' | 'ALPHANUMERIC' | 'SYMBOLS_ALPHANUMERIC' | 'BOOLEAN' | 'DATE' | 'EMAIL' | 'PHONE' | 'IMAGE_UPLOAD' | 'DOCUMENT_UPLOAD'
+  field_type: 'NUMERIC' | 'STRING' | 'ALPHANUMERIC' | 'SYMBOLS_ALPHANUMERIC' | 'BOOLEAN' | 'DATE' | 'EMAIL' | 'PHONE' | 'SELECT' | 'IMAGE_UPLOAD' | 'DOCUMENT_UPLOAD'
   validation_rules: Record<string, unknown>
   is_required: boolean
   is_unique: boolean
@@ -52,6 +52,7 @@ export interface FormField {
   created_by?: string
   created_at: string
   updated_at: string
+  options?: string[] // For SELECT fields
 }
 
 export interface FormSchema {

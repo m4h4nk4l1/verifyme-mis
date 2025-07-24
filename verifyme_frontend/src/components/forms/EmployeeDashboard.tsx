@@ -14,7 +14,6 @@ import {
   Search, 
   Filter, 
   Plus, 
-  Download, 
   FileSpreadsheet, 
   FileText, 
   RefreshCw,
@@ -84,9 +83,137 @@ const EditModal = ({ entry, schema, onSave, onClose }: {
   onClose: () => void 
 }) => {
   const [formData, setFormData] = useState<Record<string, unknown>>(entry.form_data || {});
+  const [uploading, setUploading] = useState(false);
   
+  const handleFieldChange = (fieldName: string, value: unknown) => {
+    setFormData(prev => ({ ...prev, [fieldName]: value }));
+  };
+
+  const handleFileUpload = async (fieldName: string, file: File) => {
+    try {
+      setUploading(true);
+      
+      // Upload the file
+      const uploadedFile = await apiClient.uploadFormFieldFile(
+        entry.id,
+        fieldName,
+        file,
+        `Uploaded for ${fieldName}`
+      );
+      
+      // Store the S3 URL in form data
+      const s3Url = uploadedFile.file_url || uploadedFile.s3_url || uploadedFile.url;
+      if (s3Url) {
+        setFormData(prev => ({ ...prev, [fieldName]: s3Url }));
+        toast.success('File uploaded successfully');
+      } else {
+        throw new Error('No S3 URL returned');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeFile = (fieldName: string) => {
+    setFormData(prev => ({ ...prev, [fieldName]: '' }));
+  };
+
   const handleSave = () => {
     onSave(formData);
+  };
+
+  const renderField = (field: Record<string, unknown>) => {
+    const fieldName = field.name as string;
+    const fieldType = field.field_type as string;
+    const displayName = field.display_name as string || fieldName;
+    const isRequired = field.is_required as boolean;
+    const currentValue = formData[fieldName] as string | undefined;
+
+    if (fieldType === 'IMAGE_UPLOAD' || fieldType === 'DOCUMENT_UPLOAD') {
+      return (
+        <div key={fieldName} className="space-y-2">
+          <Label htmlFor={fieldName}>
+            {displayName}
+            {isRequired && <span className="text-red-500 ml-1">*</span>}
+          </Label>
+          
+          <div className="space-y-2">
+            {/* Current file display */}
+            {currentValue && typeof currentValue === 'string' && currentValue.startsWith('http') && (
+              <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+                <FileTextIcon className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Current file uploaded</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(currentValue, '_blank')}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  View
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeFile(fieldName)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Remove
+                </Button>
+              </div>
+            )}
+            
+            {/* File input */}
+            <div className="flex items-center space-x-2">
+              <Input
+                type="file"
+                id={fieldName}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFileUpload(fieldName, file);
+                  }
+                }}
+                accept={fieldType === 'IMAGE_UPLOAD' ? 'image/*' : '.pdf,.doc,.docx,.txt'}
+                className="mt-1"
+                disabled={uploading}
+              />
+              {uploading && (
+                <div className="flex items-center space-x-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-gray-500">Uploading...</span>
+                </div>
+              )}
+            </div>
+            
+            <p className="text-xs text-gray-500">
+              {fieldType === 'IMAGE_UPLOAD' 
+                ? 'Upload an image file (JPG, PNG, GIF)' 
+                : 'Upload a document (PDF, DOC, DOCX, TXT)'
+              }
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Regular input fields
+    return (
+      <div key={fieldName}>
+        <Label htmlFor={fieldName}>
+          {displayName}
+          {isRequired && <span className="text-red-500 ml-1">*</span>}
+        </Label>
+        <Input
+          id={fieldName}
+          value={currentValue || ''}
+          onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+          className="mt-1"
+        />
+      </div>
+    );
   };
   
   return (
@@ -100,22 +227,12 @@ const EditModal = ({ entry, schema, onSave, onClose }: {
         </div>
         
         <div className="space-y-4">
-          {(schema?.fields_definition as Array<Record<string, unknown>>)?.map((field: Record<string, unknown>) => (
-            <div key={field.name as string}>
-              <Label htmlFor={field.name as string}>{field.display_name as string || field.name as string}</Label>
-              <Input
-                id={field.name as string}
-                value={formData[field.name as string] as string || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, [field.name as string]: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-          ))}
+          {(schema?.fields_definition as Array<Record<string, unknown>>)?.map(renderField)}
         </div>
         
         <div className="flex justify-end space-x-2 mt-6">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={uploading}>Save Changes</Button>
         </div>
       </div>
     </div>
@@ -129,7 +246,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
   // State management
   const [formEntries, setFormEntries] = useState<FormEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [schemaFields, setSchemaFields] = useState<string[]>([]);
+  const [schemaFields, setSchemaFields] = useState<Array<{
+    name: string
+    field_type: string
+    options?: string[]
+  }>>([])
   const [caseCounts, setCaseCounts] = useState<{
     total: number;
     thisWeek: number;
@@ -218,12 +339,20 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
           const schema = firstEntry.form_schema_details as Record<string, unknown>;
           if (schema.fields_definition && Array.isArray(schema.fields_definition)) {
             const schemaFields = (schema.fields_definition as Array<Record<string, unknown>>)
-              .map((field: Record<string, unknown>) => field.name as string).sort();
+              .map((field: Record<string, unknown>) => ({
+                name: field.name as string,
+                field_type: field.field_type as string,
+                options: field.options as string[] | undefined
+              })).sort((a, b) => a.name.localeCompare(b.name));
             console.log('Extracted schema fields:', schemaFields);
             setSchemaFields(schemaFields);
           } else {
             // Fallback: extract from form data but filter out common test fields
-            const allFields = new Set<string>();
+            const allFields: Array<{
+              name: string
+              field_type: string
+              options?: string[]
+            }> = [];
             response.results.forEach((entry: FormEntry) => {
               if (entry.form_data) {
                 Object.keys(entry.form_data).forEach(field => {
@@ -234,12 +363,16 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                       field !== 'customer_name' && 
                       field !== 'location' && 
                       field !== 'agency_id') {
-                    allFields.add(field);
+                    allFields.push({
+                      name: field,
+                      field_type: 'STRING',
+                      options: undefined
+                    });
                   }
                 });
               }
             });
-            const sortedFields = Array.from(allFields).sort();
+            const sortedFields = allFields.sort((a, b) => a.name.localeCompare(b.name));
             setSchemaFields(sortedFields);
           }
         }
@@ -527,110 +660,40 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
     }
   }
 
-  // Get field value with file handling
-  const getFieldValue = (entry: FormEntry, fieldName: string) => {
-    // Use filtered_form_data if available, otherwise fall back to form_data
-    const dataToUse = entry.filtered_form_data || entry.form_data;
-    const value = dataToUse?.[fieldName];
-    
-    if (value === undefined || value === null) return 'N/A';
-    
-    // Handle file fields - check if it's a file ID (UUID format)
-    if (typeof value === 'string' && value.length === 36 && value.includes('-')) {
-      // Check if it's a file ID
-      const file = fileInfo[value];
-      if (file && typeof file === 'object' && 'file_url' in file) {
-        return (
-          <a 
-            href={(file as { file_url: string }).file_url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            📎 {(file as { original_filename?: string }).original_filename || 'View File'}
-          </a>
-        );
-      } else {
-        // Fetch file info if not cached
-        fetchFileInfo(value);
-        return '📎 Loading...';
-      }
-    }
-    
-    // Handle S3 URLs directly
-    if (typeof value === 'string' && value.startsWith('http')) {
-      // Check if it's a URL (S3 file link) - improved detection
-      if (value.includes('s3.amazonaws.com') || 
-          value.includes('verifyme-mis-files') ||
-          value.includes('amazonaws.com')) {
-        return (
-          <a 
-            href={value} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            📎 View File
-          </a>
-        );
-      }
-      return value;
-    }
-    
-    // Handle regular values
-    if (typeof value === 'string') {
-      return value;
-    }
-    
-    if (typeof value === 'number') {
-      return value.toString();
-    }
-    
-    if (typeof value === 'object') {
-      // Handle file fields
-      if (value && typeof value === 'object' && 'file_url' in value) {
-        return (
-          <a 
-            href={(value as { file_url: string }).file_url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            📎 {(value as { original_filename?: string }).original_filename || 'View File'}
-          </a>
-        );
-      }
-      return JSON.stringify(value);
-    }
-    
-    return String(value);
-  }
+
 
   // Get all field names from form entries - improved to remove duplicates and filter properly
   const getAllFieldNames = () => {
-    const fieldNames = new Set<string>();
+    const fieldObjects: Array<{
+      name: string
+      field_type: string
+      options?: string[]
+    }> = [];
     
     formEntries.forEach(entry => {
-      // Use filtered_form_data if available, otherwise fall back to form_data
-      const dataToUse = entry.filtered_form_data || entry.form_data;
-      
-      if (dataToUse) {
-        Object.keys(dataToUse).forEach(key => {
-          // Only add valid schema fields, exclude system fields
-          if (key && typeof key === 'string' && key.trim() !== '') {
-            // Filter out common system fields that shouldn't be displayed
-            const systemFields = ['id', 'created_at', 'updated_at', 'employee_id', 'organization_id', 'form_schema_id'];
-            if (!systemFields.includes(key)) {
-              fieldNames.add(key);
-            }
+      if (entry.form_schema_details && entry.form_schema_details.fields_definition) {
+        entry.form_schema_details.fields_definition.forEach((field: { 
+          name: string
+          field_type: string
+          options?: string[]
+        }) => {
+          // Check if we already have this field
+          const existingField = fieldObjects.find(f => f.name === field.name)
+          if (!existingField) {
+            fieldObjects.push({
+              name: field.name,
+              field_type: field.field_type,
+              options: field.options
+            });
           }
         });
       }
     });
     
-    // Convert to array and sort for consistent ordering
-    return Array.from(fieldNames).sort();
-  }
+    const result = fieldObjects.sort((a, b) => a.name.localeCompare(b.name));
+    console.log('Current schemaFields:', result);
+    return result;
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -722,22 +785,6 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       loadData();
     } catch (error) {
       console.error('Error updating status:', error);
-    }
-  };
-
-  // Download entry
-  const downloadEntry = async (entryId: string) => {
-    try {
-      const response = await apiClient.downloadEntry(entryId);
-      const url = window.URL.createObjectURL(new Blob([response]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `entry-${entryId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error('Error downloading entry:', error);
     }
   };
 
@@ -1165,8 +1212,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">EMPLOYEE</TableHead>
                             {/* Dynamic schema fields */}
                             {schemaFields.map((field) => (
-                              <TableHead key={field} className="text-left py-4 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap bg-white">
-                                {field.toUpperCase().replace(/_/g, ' ')}
+                              <TableHead key={field.name} className="text-left py-4 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap bg-white">
+                                {field.name.toUpperCase().replace(/_/g, ' ')}
                               </TableHead>
                             ))}
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">ACTIONS</TableHead>
@@ -1272,23 +1319,14 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                                 </TableCell>
                                 {/* Dynamic schema field values */}
                                 {schemaFields.map((field) => (
-                                  <TableCell key={field} className="py-4 px-4">
-                                    <div className="max-w-xs truncate" title={field}>
-                                      {getFieldValue(field)}
+                                  <TableCell key={field.name} className="py-4 px-4">
+                                    <div className="max-w-xs truncate" title={field.name}>
+                                      {getFieldValue(field.name)}
                                     </div>
                                   </TableCell>
                                 ))}
                                 <TableCell className="py-4 px-4 whitespace-nowrap">
                                   <div className="flex items-center space-x-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => downloadEntry(entry.id)}
-                                      title="Download"
-                                      className="h-8 w-8 p-0 hover:bg-blue-50"
-                                    >
-                                      <Download className="w-3 h-3" />
-                                    </Button>
                                     <Button
                                       variant="ghost"
                                       size="sm"

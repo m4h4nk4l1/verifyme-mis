@@ -21,7 +21,7 @@ interface FormField {
   id: string
   name: string
   display_name: string
-  field_type: 'NUMERIC' | 'STRING' | 'ALPHANUMERIC' | 'SYMBOLS_ALPHANUMERIC' | 'BOOLEAN' | 'DATE' | 'EMAIL' | 'PHONE' | 'IMAGE_UPLOAD' | 'DOCUMENT_UPLOAD'
+  field_type: 'NUMERIC' | 'STRING' | 'ALPHANUMERIC' | 'SYMBOLS_ALPHANUMERIC' | 'BOOLEAN' | 'DATE' | 'EMAIL' | 'PHONE' | 'SELECT' | 'IMAGE_UPLOAD' | 'DOCUMENT_UPLOAD'
   validation_rules: Record<string, unknown>
   is_required: boolean
   is_unique: boolean
@@ -29,6 +29,7 @@ interface FormField {
   help_text?: string
   order: number
   is_active: boolean
+  options?: string[] // For SELECT fields
 }
 
 export function FormView({ 
@@ -155,76 +156,103 @@ export function FormView({
     if (!validateForm()) return
     
     setSubmitting(true)
-    const tempEntriesToCleanup: string[] = []
+    let tempEntryId: string | null = null
     
     try {
       // First, upload any files that are File objects
       const processedFormData = { ...formData }
       const fileUploadPromises: Promise<void>[] = []
+      const filesToUpload: { fieldName: string; file: File; field: FormField }[] = []
 
+      // Collect all files that need to be uploaded
       for (const [fieldName, value] of Object.entries(formData)) {
         if (value instanceof File) {
-          // This is a file that needs to be uploaded
           const field = selectedSchema.fields_definition?.find(f => f.name === fieldName)
           if (field) {
-            const uploadPromise = (async () => {
-              try {
-                console.log(`📤 Starting file upload for ${fieldName}:`, value.name)
-                
-                // Create a temporary form entry for file upload
-                const tempEntryData = {
-                  form_schema: selectedSchema.id,
-                  form_data: { [fieldName]: 'temp' }, // Temporary data
-                  organization: user.organization,
-                  employee: user.id
-                }
-                
-                console.log(`📋 Creating temp entry for ${fieldName}`)
-                const tempEntry = await apiClient.createFormEntry(tempEntryData)
-                console.log(`✅ Temp entry created:`, tempEntry.id)
-                
-                // Upload the file with the temporary form entry ID
-                console.log(`📤 Uploading file to S3 for ${fieldName}`)
-                const uploadedFile = await apiClient.uploadFormFieldFile(
-                  tempEntry.id,
-                  fieldName,
-                  value,
-                  `Uploaded for ${field.display_name}`
-                )
-                
-                console.log(`✅ File uploaded successfully for ${fieldName}:`, uploadedFile)
-                
-                // Store the S3 URL in form data - try different possible field names
-                const s3Url = uploadedFile.file_url || uploadedFile.s3_url || uploadedFile.url
-                console.log(`💾 Extracted S3 URL: ${s3Url}`)
-                
-                if (s3Url) {
-                  processedFormData[fieldName] = s3Url
-                  console.log(`💾 Stored S3 URL for field ${fieldName}`)
-                } else {
-                  console.error(`❌ No S3 URL found in response for ${fieldName}`)
-                  throw new Error(`No S3 URL returned for ${fieldName}`)
-                }
-                
-                // Store temp entry ID for later cleanup after form submission
-                console.log(`📋 File uploaded successfully, temp entry ID:`, tempEntry.id)
-                tempEntriesToCleanup.push(tempEntry.id)
-                
-              } catch (uploadError) {
-                console.error(`❌ Error uploading file for ${fieldName}:`, uploadError)
-                toast.error(`Failed to upload ${field.display_name}`)
-                throw uploadError
-              }
-            })()
-            
-            fileUploadPromises.push(uploadPromise)
+            filesToUpload.push({ fieldName, file: value, field })
           }
         }
       }
 
-      // Wait for all file uploads to complete
-      if (fileUploadPromises.length > 0) {
-        await Promise.all(fileUploadPromises)
+      // If there are files to upload, create a single temporary entry
+      if (filesToUpload.length > 0) {
+        console.log(`📋 Creating single temp entry for ${filesToUpload.length} files`)
+        const tempEntryData = {
+          form_schema: selectedSchema.id,
+          form_data: { temp: 'temp' }, // Temporary data
+          organization: user.organization,
+          employee: user.id
+        }
+        
+        try {
+          const tempEntry = await apiClient.createFormEntry(tempEntryData)
+          tempEntryId = tempEntry.id
+          console.log(`✅ Single temp entry created:`, tempEntryId)
+        } catch (error) {
+          console.error('❌ Failed to create temporary entry for file uploads:', error)
+          toast.error('Failed to prepare file upload. Please try again.')
+          setSubmitting(false)
+          return
+        }
+
+        // Upload all files using the same temporary entry
+        for (const { fieldName, file, field } of filesToUpload) {
+          const uploadPromise = (async () => {
+            try {
+              console.log(`📤 Starting file upload for ${fieldName}:`, file.name)
+              
+              // Upload the file with the temporary form entry ID
+              console.log(`📤 Uploading file to S3 for ${fieldName}`)
+              const uploadedFile = await apiClient.uploadFormFieldFile(
+                tempEntryId!,
+                fieldName,
+                file,
+                `Uploaded for ${field.display_name}`
+              )
+              
+              console.log(`✅ File uploaded successfully for ${fieldName}:`, uploadedFile)
+              
+              // Store the S3 URL in form data - try different possible field names
+              const s3Url = uploadedFile.file_url || uploadedFile.s3_url || uploadedFile.url
+              console.log(`💾 Extracted S3 URL: ${s3Url}`)
+              
+              if (s3Url) {
+                processedFormData[fieldName] = s3Url
+                console.log(`💾 Stored S3 URL for field ${fieldName}`)
+              } else {
+                console.error(`❌ No S3 URL found in response for ${fieldName}`)
+                throw new Error(`No S3 URL returned for ${fieldName}`)
+              }
+              
+            } catch (uploadError) {
+              console.error(`❌ Error uploading file for ${fieldName}:`, uploadError)
+              toast.error(`Failed to upload ${field.display_name}`)
+              throw uploadError
+            }
+          })()
+          
+          fileUploadPromises.push(uploadPromise)
+        }
+
+        // Wait for all file uploads to complete
+        if (fileUploadPromises.length > 0) {
+          try {
+            await Promise.all(fileUploadPromises)
+          } catch (error) {
+            console.error('❌ One or more file uploads failed:', error)
+            // Clean up the temporary entry if file uploads failed
+            if (tempEntryId) {
+              try {
+                await apiClient.deleteFormEntry(tempEntryId)
+                console.log(`✅ Cleaned up temp entry after failed uploads: ${tempEntryId}`)
+              } catch (cleanupError) {
+                console.warn(`⚠️ Failed to cleanup temp entry ${tempEntryId}:`, cleanupError)
+              }
+            }
+            setSubmitting(false)
+            return
+          }
+        }
       }
 
       // Now create the form entry with all data (including file IDs)
@@ -236,46 +264,61 @@ export function FormView({
       
       // Create the form entry with retry logic
       let newEntry
-      try {
-        newEntry = await apiClient.createFormEntry(entryData)
-        console.log('🎉 Form submitted successfully:', newEntry)
-        toast.success('Form submitted successfully!')
-      } catch (error: unknown) {
-        console.error('=== FORM SUBMISSION ERROR ===')
-        console.error('Error submitting form:', error)
-        
-        if (error && typeof error === 'object' && 'response' in error) {
-          const errorResponse = error as { response?: { data?: { message?: string, error?: string }, status?: number } }
+      let retryCount = 0
+      const maxRetries = 3
+      
+      while (retryCount < maxRetries) {
+        try {
+          newEntry = await apiClient.createFormEntry(entryData)
+          console.log('🎉 Form submitted successfully:', newEntry)
+          toast.success('Form submitted successfully!')
+          break // Success, exit the retry loop
+        } catch (error: unknown) {
+          retryCount++
+          console.error(`=== FORM SUBMISSION ERROR (Attempt ${retryCount}/${maxRetries}) ===`)
+          console.error('Error submitting form:', error)
           
-          if (errorResponse.response?.data?.message === 'Potential duplicate entry detected') {
-            toast.error('Duplicate entry detected. Please check your data.')
-          } else if (errorResponse.response?.data?.error) {
-            toast.error(errorResponse.response.data.error)
+          if (error && typeof error === 'object' && 'response' in error) {
+            const errorResponse = error as { response?: { data?: { message?: string, error?: string }, status?: number } }
+            
+            // Check if it's a conflict error that we should retry
+            if (errorResponse.response?.status === 409) {
+              if (retryCount < maxRetries) {
+                console.log(`🔄 Retrying form submission (${retryCount}/${maxRetries})...`)
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
+                continue
+              } else {
+                toast.error('Form submission failed due to a conflict. Please try again.')
+              }
+            } else if (errorResponse.response?.data?.message === 'Potential duplicate entry detected') {
+              toast.error('Duplicate entry detected. Please check your data.')
+            } else if (errorResponse.response?.data?.error) {
+              toast.error(errorResponse.response.data.error)
+            } else {
+              toast.error('Failed to submit form. Please try again.')
+            }
           } else {
             toast.error('Failed to submit form. Please try again.')
           }
-        } else {
-          toast.error('Failed to submit form. Please try again.')
+          
+          // If we reach here, it's not a retryable error or we've exhausted retries
+          break
         }
-      } finally {
-        setSubmitting(false)
       }
       
       // If we reach here, the form submission was successful
       onEntryCreated?.(newEntry)
       
-      // Clean up temporary entries after successful form submission
-      if (tempEntriesToCleanup.length > 0) {
-        console.log('🧹 Cleaning up temporary entries:', tempEntriesToCleanup)
-        for (const tempEntryId of tempEntriesToCleanup) {
-          try {
-            await apiClient.deleteFormEntry(tempEntryId)
-            console.log(`✅ Cleaned up temp entry: ${tempEntryId}`)
-          } catch (cleanupError) {
-            console.warn(`⚠️ Failed to cleanup temp entry ${tempEntryId}:`, cleanupError)
-          }
+      // Clean up temporary entry after successful form submission
+      if (tempEntryId) {
+        console.log('🧹 Cleaning up temporary entry:', tempEntryId)
+        try {
+          await apiClient.deleteFormEntry(tempEntryId)
+          console.log(`✅ Cleaned up temp entry: ${tempEntryId}`)
+        } catch (cleanupError) {
+          console.warn(`⚠️ Failed to cleanup temp entry ${tempEntryId}:`, cleanupError)
+          // Don't fail the entire operation if cleanup fails
         }
-        tempEntriesToCleanup.length = 0 // Clear the array
       }
       
       console.log('📋 Form data being submitted:', processedFormData)
@@ -290,24 +333,21 @@ export function FormView({
         })
         setFormData(initialData)
       }
-      
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('=== FORM SUBMISSION ERROR ===')
       console.error('Error submitting form:', error)
       
-      if (error && typeof error === 'object' && 'response' in error) {
-        const errorResponse = error as { response?: { data?: { message?: string, error?: string }, status?: number } }
-        
-        if (errorResponse.response?.data?.message === 'Potential duplicate entry detected') {
-          toast.error('Duplicate entry detected. Please check your data.')
-        } else if (errorResponse.response?.data?.error) {
-          toast.error(errorResponse.response.data.error)
-        } else {
-          toast.error('Failed to submit form. Please try again.')
+      // Clean up temporary entry if form submission failed
+      if (tempEntryId) {
+        try {
+          await apiClient.deleteFormEntry(tempEntryId)
+          console.log(`✅ Cleaned up temp entry after failed submission: ${tempEntryId}`)
+        } catch (cleanupError) {
+          console.warn(`⚠️ Failed to cleanup temp entry ${tempEntryId}:`, cleanupError)
         }
-      } else {
-        toast.error('Failed to submit form. Please try again.')
       }
+      
+      toast.error('Failed to submit form. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -408,6 +448,30 @@ export function FormView({
               placeholder={`Enter ${field.display_name.toLowerCase()}`}
               className="h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-xl transition-all duration-200 text-base font-medium"
             />
+          </div>
+        )
+
+      case 'SELECT':
+        return (
+          <div className="space-y-3 group">
+            <Label htmlFor={field.name} className={`text-base font-semibold ${isRequired ? 'text-red-600' : 'text-gray-800'}`}>
+              {field.display_name} {isRequired && <span className="text-red-500 font-bold">*</span>}
+            </Label>
+            <select
+              id={field.name}
+              value={String(value)}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              disabled={readOnly}
+              required={isRequired}
+              className="h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 rounded-xl transition-all duration-200 text-base font-medium"
+            >
+              <option value="">Select an option</option>
+              {field.options?.map((option, index) => (
+                <option key={index} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
         )
 

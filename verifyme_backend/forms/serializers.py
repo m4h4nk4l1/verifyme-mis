@@ -376,6 +376,12 @@ class FormFieldFileCreateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['uploaded_by']
     
+    def validate_form_entry(self, value):
+        """Handle cases where form_entry is sent as 'undefined' string"""
+        if value == "undefined" or value == "null":
+            return None
+        return value
+    
     def create(self, validated_data):
         """Create a new FormFieldFile with uploaded_by set from request user"""
         request = self.context.get('request')

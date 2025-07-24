@@ -468,10 +468,8 @@ class FormEntryViewSet(viewsets.ModelViewSet):
             logger.error(f"❌ Error in create method: {str(e)}")
             import traceback
             logger.error(f"❌ Full traceback: {traceback.format_exc()}")
-            return Response(
-                {'error': 'Failed to create form entry. Please try again.'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Re-raise the exception to be handled by the view
+            raise
     
     def create(self, request, *args, **kwargs):
         """Create a new form entry with enhanced error handling"""
@@ -509,13 +507,27 @@ class FormEntryViewSet(viewsets.ModelViewSet):
             logger.error(f"❌ Full traceback: {traceback.format_exc()}")
             
             # Handle specific database constraint errors
-            if "duplicate key value violates unique constraint" in str(e) and "case_id" in str(e):
-                logger.error("❌ Case ID conflict detected - this should not happen with new system")
-                logger.error("❌ This indicates a bug in the case_id generation system")
-                return Response(
-                    {'error': 'Internal error with case ID generation. Please try again.'}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+            if "duplicate key value violates unique constraint" in str(e):
+                if "case_id" in str(e):
+                    logger.error("❌ Case ID conflict detected - this should not happen with new system")
+                    logger.error("❌ This indicates a bug in the case_id generation system")
+                    return Response(
+                        {'error': 'Internal error with case ID generation. Please try again.'}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+                elif "entry_id" in str(e):
+                    logger.error("❌ Entry ID conflict detected - this indicates a race condition")
+                    logger.error("❌ Multiple form entries were created simultaneously")
+                    return Response(
+                        {'error': 'A form entry with this ID already exists. Please try again.'}, 
+                        status=status.HTTP_409_CONFLICT
+                    )
+                else:
+                    logger.error("❌ Unknown unique constraint violation")
+                    return Response(
+                        {'error': 'A duplicate entry was detected. Please try again.'}, 
+                        status=status.HTTP_409_CONFLICT
+                    )
             
             return Response(
                 {'error': 'Failed to create form entry. Please try again.'}, 
@@ -794,7 +806,7 @@ class FormEntryViewSet(viewsets.ModelViewSet):
                 if status_value == 'completed':
                     queryset = queryset.filter(is_completed=True)
                 elif status_value == 'pending':
-                    queryset = queryset.filter(is_completed=False)
+                    queryset = queryset.filter(is_completed=False, is_verified=False)
                 elif status_value == 'verified':
                     queryset = queryset.filter(is_verified=True)
             
@@ -843,30 +855,30 @@ class FormEntryViewSet(viewsets.ModelViewSet):
             
             warnings = []
             for filter_name in business_filters:
-                if filters.get(filter_name) and filter_name not in schema_fields:
+                if filters.get(filter_name) and not any(field.lower() == filter_name.lower() for field in schema_fields):
                     field_display_name = filter_name.replace('_', ' ').title()
                     warnings.append(f"Filter field '{field_display_name}' is not present in your organization's form schemas")
             
-            # Apply business-specific filters if they exist in schema
-            if filters.get('bank_nbfc_name') and 'bank_nbfc_name' in schema_fields:
+            # Apply business-specific filters if they exist in schema (case-insensitive)
+            if filters.get('bank_nbfc_name') and any(field.lower() == 'bank_nbfc_name' for field in schema_fields):
                 queryset = queryset.filter(form_data__bank_nbfc_name__icontains=filters['bank_nbfc_name'])
             
-            if filters.get('location') and 'location' in schema_fields:
+            if filters.get('location') and any(field.lower() == 'location' for field in schema_fields):
                 queryset = queryset.filter(form_data__location__icontains=filters['location'])
             
-            if filters.get('product_type') and 'product_type' in schema_fields:
+            if filters.get('product_type') and any(field.lower() == 'product_type' for field in schema_fields):
                 queryset = queryset.filter(form_data__product_type__icontains=filters['product_type'])
             
-            if filters.get('case_status') and 'case_status' in schema_fields:
+            if filters.get('case_status') and any(field.lower() == 'case_status' for field in schema_fields):
                 queryset = queryset.filter(form_data__case_status__icontains=filters['case_status'])
             
-            if filters.get('field_verifier_name') and 'field_verifier_name' in schema_fields:
+            if filters.get('field_verifier_name') and any(field.lower() == 'field_verifier_name' for field in schema_fields):
                 queryset = queryset.filter(form_data__field_verifier_name__icontains=filters['field_verifier_name'])
             
-            if filters.get('back_office_executive_name') and 'back_office_executive_name' in schema_fields:
+            if filters.get('back_office_executive_name') and any(field.lower() == 'back_office_executive_name' for field in schema_fields):
                 queryset = queryset.filter(form_data__back_office_executive_name__icontains=filters['back_office_executive_name'])
             
-            if filters.get('is_repeat_case') and 'is_repeat_case' in schema_fields:
+            if filters.get('is_repeat_case') and any(field.lower() == 'is_repeat_case' for field in schema_fields):
                 is_repeat = filters['is_repeat_case'].lower() == 'true'
                 queryset = queryset.filter(form_data__is_repeat_case=is_repeat)
             
@@ -1698,9 +1710,12 @@ class FormEntryExportView(APIView):
         entries = self.get_filtered_entries(filters, organization)
         logger.info(f"Found {entries.count()} entries for export")
         
-        # Generate filename
+        # Generate filename with date range information
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-        file_name = f"form_entries_{timestamp}"
+        date_range_text = self.get_date_range_text(filters)
+        file_name = f"form_entries_{date_range_text}_{timestamp}"
+        
+        logger.info(f"Exporting {entries.count()} entries with date range: {date_range_text}")
         
         if export_format == 'excel':
             return self.export_to_excel(entries, options, file_name)
@@ -1710,6 +1725,39 @@ class FormEntryExportView(APIView):
             return self.export_to_csv(entries, options, file_name)
         else:
             return Response({'error': 'Unsupported export format'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_date_range_text(self, filters):
+        """Generate date range text for filename"""
+        date_range = filters.get('date_range', 'all')
+        start_date = filters.get('start_date')
+        end_date = filters.get('end_date')
+        month = filters.get('month')
+        year = filters.get('year')
+        
+        if date_range == 'today':
+            return 'today'
+        elif date_range == 'week':
+            return 'last_7_days'
+        elif date_range == 'month':
+            return 'last_30_days'
+        elif date_range == 'quarter':
+            return 'last_90_days'
+        elif date_range == 'year':
+            return 'last_365_days'
+        elif date_range == 'custom' and start_date and end_date:
+            return f"{start_date}_to_{end_date}"
+        elif start_date and end_date:
+            return f"{start_date}_to_{end_date}"
+        elif start_date:
+            return f"from_{start_date}"
+        elif end_date:
+            return f"until_{end_date}"
+        elif month and year:
+            return f"{year}_month_{month}"
+        elif year:
+            return f"year_{year}"
+        else:
+            return 'all_entries'
     
     def get_filtered_entries(self, filters, organization):
         """Get filtered entries with date range support"""
@@ -1767,7 +1815,7 @@ class FormEntryExportView(APIView):
         return queryset.select_related('employee', 'form_schema', 'organization')
     
     def export_to_excel(self, entries, options, file_name):
-        """Export to Excel with file references and S3 links"""
+        """Export to Excel with clean, concise format showing only essential fields"""
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         from openpyxl.utils import get_column_letter
         
@@ -1786,22 +1834,20 @@ class FormEntryExportView(APIView):
             bottom=Side(style='thin')
         )
         
-        # Enhanced headers with business fields
-        headers = [
-            'Agency ID', 'Employee', 'Organization', 'Form Schema', 'Status', 'Created', 'Completed',
-            'TAT Duration (hrs)', 'Verified', 'Verification Notes', 'Bank/NBFC', 'Location', 
-            'Product Type', 'Case Status', 'Field Verifier', 'Back Office Executive', 'Repeat Case',
-            'Files with S3 Links'
-        ]
+        # Get all unique field names from schemas to create dynamic columns
+        schema_fields = set()
+        for entry in entries:
+            if entry.form_schema and entry.form_schema.fields_definition:
+                for field in entry.form_schema.fields_definition:
+                    if isinstance(field, dict) and 'name' in field:
+                        schema_fields.add(field['name'])
         
-        # Add form data headers based on first entry
-        if entries.exists():
-            first_entry = entries.first()
-            if first_entry.form_data:
-                for key in first_entry.form_data.keys():
-                    if key not in ['bank_nbfc_name', 'location', 'product_type', 'case_status', 
-                                  'field_verifier_name', 'back_office_executive_name', 'is_repeat_case']:
-                        headers.append(key.replace('_', ' ').title())
+        # Create headers
+        headers = ['Case ID', 'Employee', 'Status', 'Created Date']
+        # Add schema fields to headers
+        for field_name in sorted(schema_fields):
+            headers.append(field_name.replace('_', ' ').title())
+        headers.append('Files')
         
         # Write headers
         for col, header in enumerate(headers, 1):
@@ -1814,20 +1860,13 @@ class FormEntryExportView(APIView):
         # Write data
         for row, entry in enumerate(entries, 2):
             col = 1
-            # Agency ID (auto-incrementing)
-            ws.cell(row=row, column=col, value=row-1)
+            
+            # Case ID
+            ws.cell(row=row, column=col, value=str(entry.case_id or entry.entry_id))
             col += 1
             
             # Employee
             ws.cell(row=row, column=col, value=f"{entry.employee.first_name} {entry.employee.last_name}")
-            col += 1
-            
-            # Organization
-            ws.cell(row=row, column=col, value=entry.organization.name)
-            col += 1
-            
-            # Form Schema
-            ws.cell(row=row, column=col, value=entry.form_schema.name)
             col += 1
             
             # Status with color coding
@@ -1837,108 +1876,34 @@ class FormEntryExportView(APIView):
                 status_cell.font = Font(color="FFFFFF", bold=True)
             col += 1
             
-            # Created
-            ws.cell(row=row, column=col, value=entry.created_at.strftime('%Y-%m-%d %H:%M'))
+            # Created Date
+            ws.cell(row=row, column=col, value=entry.created_at.strftime('%Y-%m-%d'))
             col += 1
             
-            # Completed
-            ws.cell(row=row, column=col, value=entry.tat_completion_time.strftime('%Y-%m-%d %H:%M') if entry.tat_completion_time else '')
-            col += 1
-            
-            # TAT Duration with color coding
-            tat_hours = entry.tat_duration if entry.tat_duration else 0
-            tat_cell = ws.cell(row=row, column=col, value=round(tat_hours, 2) if tat_hours else '')
-            # Use schema-specific TAT limit for color coding
-            tat_limit = entry.form_schema.tat_hours_limit
-            if tat_hours > tat_limit:
-                tat_cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-                tat_cell.font = Font(color="FFFFFF", bold=True)
-            col += 1
-            
-            # Verified
-            ws.cell(row=row, column=col, value='Yes' if entry.is_verified else 'No')
-            col += 1
-            
-            # Verification Notes
-            ws.cell(row=row, column=col, value=entry.verification_notes or '')
-            col += 1
-            
-            # Business fields from form data
+            # Add schema field values
             form_data = entry.form_data or {}
-            ws.cell(row=row, column=col, value=form_data.get('bank_nbfc_name', ''))
-            col += 1
-            ws.cell(row=row, column=col, value=form_data.get('location', ''))
-            col += 1
-            ws.cell(row=row, column=col, value=form_data.get('product_type', ''))
-            col += 1
-            ws.cell(row=row, column=col, value=form_data.get('case_status', ''))
-            col += 1
-            ws.cell(row=row, column=col, value=form_data.get('field_verifier_name', ''))
-            col += 1
-            ws.cell(row=row, column=col, value=form_data.get('back_office_executive_name', ''))
-            col += 1
-            ws.cell(row=row, column=col, value='Yes' if form_data.get('is_repeat_case') else 'No')
-            col += 1
+            for field_name in sorted(schema_fields):
+                value = form_data.get(field_name, '')
+                ws.cell(row=row, column=col, value=str(value))
+                col += 1
             
-            # Get file attachments with S3 links
+            # Files
             file_attachments = FileAttachment.objects.filter(form_entry=entry)
             form_field_files = FormFieldFile.objects.filter(form_entry=entry)
             
-            file_links = []
+            file_list = []
             for attachment in file_attachments:
-                file_url = S3FileManager.get_presigned_url(attachment.file.name)
-                if file_url:
-                    file_links.append(f"{attachment.original_filename}: {file_url}")
-                else:
-                    file_links.append(f"{attachment.original_filename}: No URL")
+                file_list.append(attachment.original_filename)
             
             for field_file in form_field_files:
-                file_url = field_file.s3_url or S3FileManager.get_presigned_url(field_file.file.name)
-                if file_url:
-                    file_links.append(f"{field_file.field_name} - {field_file.original_filename}: {file_url}")
-                else:
-                    file_links.append(f"{field_file.field_name} - {field_file.original_filename}: No URL")
+                file_list.append(f"{field_file.field_name}: {field_file.original_filename}")
             
-            ws.cell(row=row, column=col, value="\n".join(file_links) if file_links else "No files")
-            col += 1
-            
-            # Add remaining form data
-            if entry.form_data:
-                for key, value in entry.form_data.items():
-                    if key not in ['bank_nbfc_name', 'location', 'product_type', 'case_status', 
-                                  'field_verifier_name', 'back_office_executive_name', 'is_repeat_case']:
-                        # Check if this is a file field
-                        field_definition = entry.form_schema.fields_definition
-                        if isinstance(field_definition, list):
-                            field = next((f for f in field_definition if f.get('name') == key), {})
-                        else:
-                            field = field_definition.get(key, {})
-                        
-                        if field.get('field_type') in ['IMAGE_UPLOAD', 'DOCUMENT_UPLOAD']:
-                            # Try to get file attachment
-                            try:
-                                file_attachment = FileAttachment.objects.filter(
-                                    form_entry=entry,
-                                    original_filename__icontains=str(value)
-                                ).first()
-                                if file_attachment:
-                                    # Generate S3 presigned URL
-                                    file_url = S3FileManager.get_presigned_url(file_attachment.file.name)
-                                    cell_value = f"File: {file_attachment.original_filename}\nLink: {file_url}" if file_url else f"File: {file_attachment.original_filename}"
-                                else:
-                                    cell_value = str(value)
-                            except Exception as e:
-                                logger.error(f"Error processing file field {key}: {e}")
-                                cell_value = str(value)
-                        else:
-                            cell_value = str(value)
-                        
-                        ws.cell(row=row, column=col, value=cell_value)
-                        col += 1
+            file_text = ", ".join(file_list) if file_list else "No files"
+            ws.cell(row=row, column=col, value=file_text)
             
             # Apply borders to all cells in the row
-            for col_idx in range(1, len(headers) + 1):
-                ws.cell(row=row, column=col_idx).border = border
+            for c in range(1, col + 1):
+                ws.cell(row=row, column=c).border = border
         
         # Auto-adjust column widths
         for column in ws.columns:
@@ -1950,42 +1915,19 @@ class FormEntryExportView(APIView):
                         max_length = len(str(cell.value))
                 except:
                     pass
-            adjusted_width = min(max_length + 2, 50)
+            adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
             ws.column_dimensions[column_letter].width = adjusted_width
         
-        # Add summary sheet
-        summary_ws = wb.create_sheet("Summary")
-        
-        # Summary statistics
-        total_entries = entries.count()
-        completed_entries = entries.filter(is_completed=True).count()
-        # Calculate out of TAT entries using Python filtering since tat_duration is a property
-        out_of_tat_entries = sum(1 for entry in entries if entry.is_out_of_tat)
-        
-        summary_data = [
-            ['Metric', 'Count'],
-            ['Total Entries', total_entries],
-            ['Completed Entries', completed_entries],
-            ['Out of TAT', out_of_tat_entries],
-            ['Completion Rate', f"{(completed_entries/total_entries*100):.1f}%" if total_entries > 0 else "0%"]
-        ]
-        
-        for row, (label, value) in enumerate(summary_data, 1):
-            summary_ws.cell(row=row, column=1, value=label).font = Font(bold=True)
-            summary_ws.cell(row=row, column=2, value=value)
-        
-        # Create response
+        # Save to response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = f'attachment; filename="{file_name}.xlsx"'
-        
         wb.save(response)
-        logger.info(f"Excel export completed: {file_name}.xlsx")
         return response
     
     def export_to_pdf(self, entries, options, file_name):
-        """Export to PDF with attachments and S3 links"""
+        """Export to PDF with auto-scaling for optimal readability"""
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
         
@@ -1997,17 +1939,17 @@ class FormEntryExportView(APIView):
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=30
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center alignment
         )
         story.append(Paragraph("Form Entries Report", title_style))
-        story.append(Spacer(1, 12))
+        story.append(Spacer(1, 20))
         
-        # Enhanced Summary
+        # Summary Statistics (simplified)
         total_entries = entries.count()
         completed_entries = entries.filter(is_completed=True).count()
         verified_entries = entries.filter(is_verified=True).count()
-        # Calculate out of TAT entries using Python filtering since tat_duration is a property
         out_of_tat_entries = sum(1 for entry in entries if entry.is_out_of_tat)
         
         summary_data = [
@@ -2018,7 +1960,7 @@ class FormEntryExportView(APIView):
             ['Out of TAT', str(out_of_tat_entries), f"{(out_of_tat_entries/total_entries*100):.1f}%" if total_entries > 0 else "0%"]
         ]
         
-        summary_table = Table(summary_data, colWidths=[2*inch, 1*inch, 1*inch])
+        summary_table = Table(summary_data, colWidths=[2.5*inch, 1*inch, 1*inch])
         summary_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -2027,184 +1969,223 @@ class FormEntryExportView(APIView):
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
         ]))
         story.append(summary_table)
-        story.append(Spacer(1, 20))
+        story.append(Spacer(1, 30))
         
-        # Enhanced Entries table with business fields
-        table_data = [['Agency ID', 'Employee', 'Schema', 'Status', 'Created', 'TAT', 'Bank/NBFC', 'Location', 'Product', 'Files']]
+        # Get all unique field names from schemas to create dynamic columns
+        schema_fields = set()
+        for entry in entries:
+            if entry.form_schema and entry.form_schema.fields_definition:
+                for field in entry.form_schema.fields_definition:
+                    if isinstance(field, dict) and 'name' in field:
+                        schema_fields.add(field['name'])
         
-        for idx, entry in enumerate(entries, 1):
-            # Get file attachments for this entry
-            file_attachments = FileAttachment.objects.filter(form_entry=entry)
-            form_field_files = FormFieldFile.objects.filter(form_entry=entry)
-            
-            file_info = []
-            for attachment in file_attachments:
-                file_url = S3FileManager.get_presigned_url(attachment.file.name)
-                file_info.append(f"{attachment.original_filename}: {file_url}" if file_url else attachment.original_filename)
-            
-            for field_file in form_field_files:
-                file_url = field_file.s3_url or S3FileManager.get_presigned_url(field_file.file.name)
-                if file_url:
-                    file_info.append(f"{field_file.field_name} - {field_file.original_filename}: {file_url}")
-                else:
-                    file_info.append(f"{field_file.field_name} - {field_file.original_filename}: No URL")
-            
-            file_text = "\n".join(file_info) if file_info else "No files"
-            
-            # Get business fields from form data
+        # Create table headers
+        headers = ['Case ID', 'Employee', 'Status', 'Created Date']
+        for field_name in sorted(schema_fields):
+            headers.append(field_name.replace('_', ' ').title())
+        
+        table_data = [headers]
+        
+        def extract_filename_from_url(url_string):
+            """Extract filename from URL or return original string"""
+            if isinstance(url_string, str) and url_string.startswith('http'):
+                # Extract filename from URL
+                try:
+                    from urllib.parse import urlparse
+                    parsed_url = urlparse(url_string)
+                    path = parsed_url.path
+                    filename = path.split('/')[-1]
+                    if filename:
+                        return filename, url_string  # Return both filename and original URL
+                except:
+                    pass
+                return "File uploaded", url_string
+            return url_string, None
+        
+        # Collect all data first to calculate optimal column widths
+        all_rows_data = []
+        max_content_lengths = [len(header) for header in headers]
+        
+        for entry in entries:
             form_data = entry.form_data or {}
             
-            table_data.append([
-                str(idx),  # Agency ID
+            row_data = [
+                str(entry.case_id or entry.entry_id),
                 f"{entry.employee.first_name} {entry.employee.last_name}",
-                entry.form_schema.name,
                 self.get_status_text(entry),
                 entry.created_at.strftime('%Y-%m-%d'),
-                f"{round(entry.tat_duration, 1)}h" if entry.tat_duration else 'N/A',
-                form_data.get('bank_nbfc_name', ''),
-                form_data.get('location', ''),
-                form_data.get('product_type', ''),
-                file_text
-            ])
+            ]
+            
+            for field_name in sorted(schema_fields):
+                value = form_data.get(field_name, '')
+                original_url = None
+                
+                # Handle file fields - extract filename from URLs
+                if isinstance(value, str) and value.startswith('http'):
+                    value, original_url = extract_filename_from_url(value)
+                
+                # Truncate long values for readability
+                if isinstance(value, str) and len(value) > 20:
+                    value = value[:17] + "..."
+                
+                row_data.append(str(value))
+            
+            all_rows_data.append(row_data)
+            
+            # Update max content lengths for auto-scaling
+            for i, content in enumerate(row_data):
+                max_content_lengths[i] = max(max_content_lengths[i], len(str(content)))
         
-        entries_table = Table(table_data, colWidths=[0.5*inch, 1.2*inch, 1.2*inch, 1*inch, 0.8*inch, 0.6*inch, 1*inch, 0.8*inch, 0.8*inch, 2*inch])
+        # Auto-scale column widths based on content
+        num_columns = len(headers)
+        available_width = 7.2 * inch  # A4 width minus margins
+        min_column_width = 0.6 * inch
+        max_column_width = 2.0 * inch
+        
+        # Calculate optimal column widths
+        col_widths = []
+        total_content_width = sum(max_content_lengths)
+        
+        for i, max_length in enumerate(max_content_lengths):
+            # Calculate proportional width based on content length
+            proportional_width = (max_length / total_content_width) * available_width
+            
+            # Apply min/max constraints
+            optimal_width = max(min_column_width, min(max_column_width, proportional_width))
+            col_widths.append(optimal_width)
+        
+        # Adjust if total width exceeds available space
+        total_width = sum(col_widths)
+        if total_width > available_width:
+            # Scale down proportionally
+            scale_factor = available_width / total_width
+            col_widths = [width * scale_factor for width in col_widths]
+        
+        # Create table with auto-scaled data
+        for row_data in all_rows_data:
+            row = []
+            for i, content in enumerate(row_data):
+                # Create clickable link for file fields (check if it's a URL)
+                if i >= 4:  # Schema fields start from index 4
+                    field_name = list(sorted(schema_fields))[i - 4]
+                    original_value = form_data.get(field_name, '')
+                    
+                    if isinstance(original_value, str) and original_value.startswith('http'):
+                        link_style = ParagraphStyle(
+                            'LinkStyle',
+                            parent=styles['Normal'],
+                            fontSize=6,
+                            textColor=colors.blue,
+                            underline=True
+                        )
+                        cell_content = Paragraph(f'<link href="{original_value}">{content}</link>', link_style)
+                    else:
+                        cell_content = content
+                else:
+                    cell_content = content
+                
+                row.append(cell_content)
+            
+            table_data.append(row)
+        
+        # Auto-scale font sizes based on number of columns
+        if num_columns <= 6:
+            header_font_size = 9
+            data_font_size = 7
+        elif num_columns <= 8:
+            header_font_size = 8
+            data_font_size = 6
+        else:
+            header_font_size = 7
+            data_font_size = 5
+        
+        entries_table = Table(table_data, colWidths=col_widths)
         entries_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('FONTSIZE', (0, 0), (-1, 0), header_font_size),
+            ('FONTSIZE', (0, 1), (-1, -1), data_font_size),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTSIZE', (0, 1), (-1, -1), 6),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('WORDWRAP', (0, 0), (-1, -1), True),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.beige, colors.white]),
         ]))
         story.append(entries_table)
         
-        # Add detailed file information page
-        story.append(PageBreak())
-        story.append(Paragraph("File Attachments with S3 Links", title_style))
-        story.append(Spacer(1, 12))
-        
-        file_data = [['Agency ID', 'Employee', 'File Name', 'Field', 'S3 Link']]
-        
-        for idx, entry in enumerate(entries, 1):
-            # File attachments
-            for attachment in FileAttachment.objects.filter(form_entry=entry):
-                file_url = S3FileManager.get_presigned_url(attachment.file.name)
-                file_data.append([
-                    str(idx),
-                    f"{entry.employee.first_name} {entry.employee.last_name}",
-                    attachment.original_filename,
-                    'General Attachment',
-                    file_url if file_url else 'No URL'
-                ])
-            
-            # Form field files
-            for field_file in FormFieldFile.objects.filter(form_entry=entry):
-                file_url = field_file.s3_url or S3FileManager.get_presigned_url(field_file.file.name)
-                file_data.append([
-                    str(idx),
-                    f"{entry.employee.first_name} {entry.employee.last_name}",
-                    field_file.original_filename,
-                    field_file.field_name,
-                    file_url if file_url else 'No URL'
-                ])
-        
-        file_table = Table(file_data, colWidths=[0.5*inch, 1.5*inch, 2*inch, 1*inch, 3*inch])
-        file_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTSIZE', (0, 1), (-1, -1), 6),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
-        story.append(file_table)
-        
         doc.build(story)
-        logger.info(f"PDF export completed: {file_name}.pdf")
         return response
     
     def export_to_csv(self, entries, options, file_name):
-        """Export to CSV with file links"""
+        """Export to CSV with clean, concise format showing only essential fields"""
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{file_name}.csv"'
         
         writer = csv.writer(response)
         
-        # Headers
-        headers = [
-            'ID', 'Employee', 'Organization', 'Form Schema', 'Status', 'Created', 'Completed',
-            'TAT Duration (hrs)', 'Verified', 'Verification Notes'
-        ]
+        # Get all unique field names from schemas to create dynamic columns
+        schema_fields = set()
+        for entry in entries:
+            if entry.form_schema and entry.form_schema.fields_definition:
+                for field in entry.form_schema.fields_definition:
+                    if isinstance(field, dict) and 'name' in field:
+                        schema_fields.add(field['name'])
         
-        # Add form data headers
-        if entries.exists():
-            first_entry = entries.first()
-            if first_entry.form_data:
-                for key in first_entry.form_data.keys():
-                    headers.append(key.replace('_', ' ').title())
+        # Create headers
+        headers = ['Case ID', 'Employee', 'Status', 'Created Date']
+        # Add schema fields to headers
+        for field_name in sorted(schema_fields):
+            headers.append(field_name.replace('_', ' ').title())
+        headers.append('Files')
         
         writer.writerow(headers)
         
         # Data
         for entry in entries:
+            # Get file attachments for this entry
+            file_attachments = FileAttachment.objects.filter(form_entry=entry)
+            form_field_files = FormFieldFile.objects.filter(form_entry=entry)
+            
+            # Create concise file list
+            file_list = []
+            for attachment in file_attachments:
+                file_list.append(attachment.original_filename)
+            
+            for field_file in form_field_files:
+                file_list.append(f"{field_file.field_name}: {field_file.original_filename}")
+            
+            file_text = ", ".join(file_list) if file_list else "No files"
+            
+            # Get form data
+            form_data = entry.form_data or {}
+            
+            # Create row data
             row = [
-                entry.id,
-                f"{entry.employee.first_name} {entry.employee.last_name}",
-                entry.organization.name,
-                entry.form_schema.name,
-                self.get_status_text(entry),
-                entry.created_at.strftime('%Y-%m-%d %H:%M'),
-                entry.tat_completion_time.strftime('%Y-%m-%d %H:%M') if entry.tat_completion_time else '',
-                round(entry.tat_duration, 2) if entry.tat_duration else '',
-                'Yes' if entry.is_verified else 'No',
-                entry.verification_notes or ''
+                str(entry.case_id or entry.entry_id),  # Case ID
+                f"{entry.employee.first_name} {entry.employee.last_name}",  # Employee
+                self.get_status_text(entry),  # Status
+                entry.created_at.strftime('%Y-%m-%d'),  # Created Date
             ]
             
-            # Add form data with file links
-            if entry.form_data:
-                for key, value in entry.form_data.items():
-                    # Check if this is a file field
-                    field_definition = entry.form_schema.fields_definition
-                    if isinstance(field_definition, list):
-                        field = next((f for f in field_definition if f.get('name') == key), {})
-                    else:
-                        field = field_definition.get(key, {})
-                    
-                    if field.get('field_type') in ['IMAGE_UPLOAD', 'DOCUMENT_UPLOAD']:
-                        # Try to get file attachment
-                        try:
-                            file_attachment = FileAttachment.objects.filter(
-                                form_entry=entry,
-                                original_filename__icontains=str(value)
-                            ).first()
-                            if file_attachment:
-                                # Generate S3 presigned URL
-                                file_url = S3FileManager.get_presigned_url(file_attachment.file.name)
-                                cell_value = f"File: {file_attachment.original_filename}, Link: {file_url}" if file_url else f"File: {file_attachment.original_filename}"
-                            else:
-                                cell_value = str(value)
-                        except Exception as e:
-                            logger.error(f"Error processing file field {key}: {e}")
-                            cell_value = str(value)
-                    else:
-                        cell_value = str(value)
-                    
-                    row.append(cell_value)
+            # Add schema field values
+            for field_name in sorted(schema_fields):
+                value = form_data.get(field_name, '')
+                row.append(str(value))
             
+            row.append(file_text)  # Files
             writer.writerow(row)
         
-        logger.info(f"CSV export completed: {file_name}.csv")
         return response
     
     def get_status_text(self, entry):
@@ -2232,7 +2213,7 @@ class FormEntryExportView(APIView):
         summary_data = [
             ['Metric', 'Count'],
             ['Total Entries', total_entries],
-            ['Completed', completed_entries],
+            ['Completed Entries', completed_entries],
             ['Verified', verified_entries],
             ['Out of TAT', out_of_tat_entries],
             ['Completion Rate', f"{(completed_entries/total_entries*100):.1f}%" if total_entries > 0 else "0%"]
@@ -2337,86 +2318,107 @@ class EnhancedFormEntryExportView(APIView):
     def get_date_range_text(self, filters):
         """Generate date range text for filename"""
         date_range = filters.get('date_range', 'all')
-        custom_start_date = filters.get('custom_start_date')
-        custom_end_date = filters.get('custom_end_date')
+        start_date = filters.get('start_date')
+        end_date = filters.get('end_date')
+        month = filters.get('month')
+        year = filters.get('year')
         
-        if date_range == 'custom' and custom_start_date and custom_end_date:
-            return f"{custom_start_date}_to_{custom_end_date}"
-        elif date_range in ['last_7_days', 'last_30_days', 'last_90_days']:
-            return date_range.replace('_', '-')
+        if date_range == 'today':
+            return 'today'
+        elif date_range == 'week':
+            return 'last_7_days'
+        elif date_range == 'month':
+            return 'last_30_days'
+        elif date_range == 'quarter':
+            return 'last_90_days'
+        elif date_range == 'year':
+            return 'last_365_days'
+        elif date_range == 'custom' and start_date and end_date:
+            return f"{start_date}_to_{end_date}"
+        elif start_date and end_date:
+            return f"{start_date}_to_{end_date}"
+        elif start_date:
+            return f"from_{start_date}"
+        elif end_date:
+            return f"until_{end_date}"
+        elif month and year:
+            return f"{year}_month_{month}"
+        elif year:
+            return f"year_{year}"
         else:
-            return 'all-time'
+            return 'all_entries'
     
     def get_filtered_entries(self, filters, organization):
-        """Get filtered entries with enhanced date range support"""
+        """Get filtered entries with comprehensive date range support"""
         queryset = FormEntry.objects.all()
         
         # Filter by organization
         if organization:
             queryset = queryset.filter(organization=organization)
         
-        # Enhanced date range filtering
+        # Comprehensive date range filtering
         date_range = filters.get('date_range', 'all')
-        custom_start_date = filters.get('custom_start_date')
-        custom_end_date = filters.get('custom_end_date')
+        start_date = filters.get('start_date')
+        end_date = filters.get('end_date')
+        month = filters.get('month')
+        year = filters.get('year')
         
-        if date_range == 'last_7_days':
-            start_date = timezone.now() - timedelta(days=7)
-            queryset = queryset.filter(created_at__gte=start_date)
-        elif date_range == 'last_30_days':
-            start_date = timezone.now() - timedelta(days=30)
-            queryset = queryset.filter(created_at__gte=start_date)
-        elif date_range == 'last_90_days':
-            start_date = timezone.now() - timedelta(days=90)
-            queryset = queryset.filter(created_at__gte=start_date)
-        elif date_range == 'custom' and custom_start_date and custom_end_date:
+        # Handle different date range options
+        if date_range == 'today':
+            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1)
+            queryset = queryset.filter(created_at__gte=today_start, created_at__lt=today_end)
+        elif date_range == 'week':
+            week_ago = timezone.now() - timedelta(days=7)
+            queryset = queryset.filter(created_at__gte=week_ago)
+        elif date_range == 'month':
+            month_ago = timezone.now() - timedelta(days=30)
+            queryset = queryset.filter(created_at__gte=month_ago)
+        elif date_range == 'quarter':
+            quarter_ago = timezone.now() - timedelta(days=90)
+            queryset = queryset.filter(created_at__gte=quarter_ago)
+        elif date_range == 'year':
+            year_ago = timezone.now() - timedelta(days=365)
+            queryset = queryset.filter(created_at__gte=year_ago)
+        elif date_range == 'custom':
+            # Handle custom date range with start_date and end_date
+            if start_date:
+                try:
+                    start_datetime = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                    queryset = queryset.filter(created_at__gte=start_datetime)
+                except ValueError as e:
+                    logger.error(f"Invalid start_date format: {e}")
+            
+            if end_date:
+                try:
+                    end_datetime = datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc) + timedelta(days=1)
+                    queryset = queryset.filter(created_at__lt=end_datetime)
+                except ValueError as e:
+                    logger.error(f"Invalid end_date format: {e}")
+        
+        # Handle individual date filters (for advanced filters)
+        if start_date and not date_range == 'custom':
             try:
-                start_date = datetime.strptime(custom_start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
-                end_date = datetime.strptime(custom_end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc) + timedelta(days=1)
-                queryset = queryset.filter(created_at__gte=start_date, created_at__lt=end_date)
-                logger.info(f"Custom date range: {start_date} to {end_date}")
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                queryset = queryset.filter(created_at__gte=start_datetime)
             except ValueError as e:
-                logger.error(f"Invalid date format: {e}")
+                logger.error(f"Invalid start_date format: {e}")
         
-        # Case ID range filtering
-        if filters.get('case_id_from'):
+        if end_date and not date_range == 'custom':
             try:
-                case_id_from = int(filters['case_id_from'])
-                queryset = queryset.filter(case_id__gte=case_id_from)
-            except ValueError:
-                logger.error(f"Invalid case_id_from: {filters['case_id_from']}")
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=timezone.utc) + timedelta(days=1)
+                queryset = queryset.filter(created_at__lt=end_datetime)
+            except ValueError as e:
+                logger.error(f"Invalid end_date format: {e}")
         
-        if filters.get('case_id_to'):
-            try:
-                case_id_to = int(filters['case_id_to'])
-                queryset = queryset.filter(case_id__lte=case_id_to)
-            except ValueError:
-                logger.error(f"Invalid case_id_to: {filters['case_id_to']}")
+        # Month and Year filtering
+        if month is not None:
+            queryset = queryset.filter(created_at__month=month)
         
-        # Additional filters
-        if filters.get('form_schema'):
-            queryset = queryset.filter(form_schema_id=filters['form_schema'])
+        if year is not None:
+            queryset = queryset.filter(created_at__year=year)
         
-        if filters.get('status'):
-            status_filter = filters['status']
-            if status_filter == 'completed':
-                queryset = queryset.filter(is_completed=True)
-            elif status_filter == 'verified':
-                queryset = queryset.filter(is_verified=True)
-            elif status_filter == 'pending':
-                queryset = queryset.filter(is_completed=False, is_verified=False)
-        
-        if filters.get('search'):
-            search_term = filters['search']
-            queryset = queryset.filter(
-                Q(employee__first_name__icontains=search_term) |
-                Q(employee__last_name__icontains=search_term) |
-                Q(form_schema__name__icontains=search_term) |
-                Q(form_data__icontains=search_term) |
-                Q(case_id__icontains=search_term)
-            )
-        
-        # Business field filters
+        # Advanced business filters
         if filters.get('bank_nbfc_name'):
             queryset = queryset.filter(form_data__bank_nbfc_name__icontains=filters['bank_nbfc_name'])
         
@@ -2429,6 +2431,72 @@ class EnhancedFormEntryExportView(APIView):
         if filters.get('case_status'):
             queryset = queryset.filter(form_data__case_status__icontains=filters['case_status'])
         
+        # Personnel filters
+        if filters.get('field_verifier_name'):
+            queryset = queryset.filter(form_data__field_verifier_name__icontains=filters['field_verifier_name'])
+        
+        if filters.get('back_office_executive_name'):
+            queryset = queryset.filter(form_data__back_office_executive_name__icontains=filters['back_office_executive_name'])
+        
+        # Status filtering
+        if filters.get('status'):
+            status_filter = filters['status']
+            if status_filter == 'completed':
+                queryset = queryset.filter(is_completed=True)
+            elif status_filter == 'verified':
+                queryset = queryset.filter(is_verified=True)
+            elif status_filter == 'pending':
+                queryset = queryset.filter(is_completed=False, is_verified=False)
+        
+        # Employee filtering
+        if filters.get('employee_name'):
+            queryset = queryset.filter(
+                Q(employee__first_name__icontains=filters['employee_name']) |
+                Q(employee__last_name__icontains=filters['employee_name'])
+            )
+        
+        # Form schema filtering
+        if filters.get('form_schema'):
+            queryset = queryset.filter(form_schema_id=filters['form_schema'])
+        
+        # Search filtering
+        if filters.get('search'):
+            search_term = filters['search']
+            queryset = queryset.filter(
+                Q(employee__first_name__icontains=search_term) |
+                Q(employee__last_name__icontains=search_term) |
+                Q(employee__email__icontains=search_term) |
+                Q(form_schema__name__icontains=search_term) |
+                Q(verification_notes__icontains=search_term) |
+                Q(case_id__icontains=search_term) |
+                Q(form_data__icontains=search_term)
+            )
+        
+        # TAT filtering (Out of TAT)
+        if filters.get('is_out_of_tat') is not None:
+            is_out_of_tat = filters['is_out_of_tat']
+            if isinstance(is_out_of_tat, str):
+                is_out_of_tat = is_out_of_tat.lower() == 'true'
+            else:
+                is_out_of_tat = bool(is_out_of_tat)
+            
+            # Filter for entries that are out of TAT using schema-specific limits
+            out_of_tat_entries = []
+            for entry in queryset:
+                if entry.check_tat_status() == is_out_of_tat:
+                    out_of_tat_entries.append(entry.id)
+            queryset = queryset.filter(id__in=out_of_tat_entries)
+        
+        # Repeat case filtering
+        if filters.get('is_repeat_case') is not None:
+            is_repeat = filters['is_repeat_case']
+            if isinstance(is_repeat, str):
+                is_repeat = is_repeat.lower() == 'true'
+            else:
+                is_repeat = bool(is_repeat)
+            queryset = queryset.filter(form_data__is_repeat_case=is_repeat)
+        
+        logger.info(f"Enhanced filtered entries count: {queryset.count()}")
         return queryset.select_related('employee', 'form_schema', 'organization')
     
     def export_to_excel(self, entries, options, file_name):

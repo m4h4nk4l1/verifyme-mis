@@ -231,6 +231,7 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
     is_unique: false,
     default_value: '',
     help_text: '',
+    options: '', // For SELECT fields - comma-separated options
     order: 0
   })
 
@@ -246,15 +247,33 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
     { value: 'DATE', label: 'Date' },
     { value: 'EMAIL', label: 'Email' },
     { value: 'PHONE', label: 'Phone' },
+    { value: 'SELECT', label: 'Select/Dropdown' },
     { value: 'IMAGE_UPLOAD', label: 'Image Upload' },
     { value: 'DOCUMENT_UPLOAD', label: 'Document Upload' }
   ]
 
   const handleAddField = () => {
     if (newField.name && newField.display_name) {
+      // Process options for SELECT fields
+      let processedOptions: string[] | undefined
+      if (newField.field_type === 'SELECT' && newField.options) {
+        processedOptions = newField.options
+          .split(',')
+          .map(option => option.trim())
+          .filter(option => option.length > 0)
+      }
+      
       const field: FormField = {
         id: `temp-${Date.now()}`,
-        ...newField,
+        name: newField.name,
+        display_name: newField.display_name,
+        field_type: newField.field_type,
+        is_required: newField.is_required,
+        is_unique: newField.is_unique,
+        default_value: newField.default_value,
+        help_text: newField.help_text,
+        order: newField.order,
+        options: processedOptions,
         is_active: true,
         organization: '',
         created_at: new Date().toISOString(),
@@ -275,6 +294,7 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
         is_unique: false,
         default_value: '',
         help_text: '',
+        options: '',
         order: formData.fields_definition.length
       })
     }
@@ -448,6 +468,19 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
                       />
                     </div>
                   </div>
+
+                  {newField.field_type === 'SELECT' && (
+                    <div>
+                      <Label htmlFor="field_options">Options (comma-separated)</Label>
+                      <Input
+                        id="field_options"
+                        value={newField.options}
+                        onChange={(e) => setNewField({ ...newField, options: e.target.value })}
+                        placeholder="e.g., Option 1, Option 2, Option 3"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Enter options for the select field, separated by commas.</p>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-4 mt-4">
                     <label className="flex items-center space-x-2">

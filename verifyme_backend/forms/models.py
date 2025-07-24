@@ -100,18 +100,29 @@ class FormEntry(models.Model):
     def save(self, *args, **kwargs):
         # Always set entry_id if not set
         if not self.entry_id and self.organization:
-            last = FormEntry.objects.filter(organization=self.organization).aggregate(
-                max_id=models.Max('entry_id')
-            )['max_id'] or 0
-            candidate = last + 1
-            while FormEntry.objects.filter(organization=self.organization, entry_id=candidate).exists():
-                candidate += 1
-            self.entry_id = candidate
+            from django.db import transaction
+            with transaction.atomic():
+                # Use select_for_update to prevent race conditions
+                last = FormEntry.objects.filter(organization=self.organization).select_for_update().aggregate(
+                    max_id=models.Max('entry_id')
+                )['max_id'] or 0
+                candidate = last + 1
+                # Double-check to ensure uniqueness
+                while FormEntry.objects.filter(organization=self.organization, entry_id=candidate).exists():
+                    candidate += 1
+                self.entry_id = candidate
 
         # Set case_id if not already set and organization is available
         if not self.case_id and self.organization:
             try:
-                self.case_id = self.generate_unique_case_id(self.organization)
+                # Generate a unique case_id for the organization
+                last_case = FormEntry.objects.filter(organization=self.organization).aggregate(
+                    max_id=models.Max('case_id')
+                )['max_id'] or 0
+                candidate_case_id = last_case + 1
+                while FormEntry.objects.filter(organization=self.organization, case_id=candidate_case_id).exists():
+                    candidate_case_id += 1
+                self.case_id = candidate_case_id
             except Exception:
                 import time, random
                 timestamp = int(time.time() * 1000) % 1000000
@@ -213,6 +224,7 @@ class FormField(models.Model):
         ('DATE', 'Date'),
         ('EMAIL', 'Email'),
         ('PHONE', 'Phone'),
+        ('SELECT', 'Select/Dropdown'),
         ('IMAGE_UPLOAD', 'Image Upload'),
         ('DOCUMENT_UPLOAD', 'Document Upload'),
     ]

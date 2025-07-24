@@ -34,7 +34,11 @@ export interface AdvancedFiltersProps {
   onFiltersChange: (filters: FormEntryFilters) => void
   onClearFilters: () => void
   isLoading?: boolean
-  schemaFields?: string[]
+  schemaFields?: Array<{
+    name: string
+    field_type: string
+    options?: string[]
+  }>
   warnings?: string[]
 }
 
@@ -120,7 +124,7 @@ export function AdvancedFilters({
     
     const missingFields = businessFields.filter(field => {
       const hasValue = localFilters[field.filterKey as keyof FormEntryFilters]
-      const existsInSchema = schemaFields.includes(field.schemaField)
+      const existsInSchema = schemaFields.some(f => f.name === field.schemaField)
       return hasValue && !existsInSchema
     })
 
@@ -255,11 +259,45 @@ export function AdvancedFilters({
     ]
   }
 
-  // Define always-present fields
-  const alwaysPresentFields = ['tat', 'agency_id', 'case_status']
+  // Helper to check if a field should be shown (case-insensitive matching)
+  const hasField = (schemaField: string) => {
+    console.log('🔍 Checking for field:', schemaField)
+    console.log('🔍 Available schema fields:', schemaFields)
+    
+    // Define possible field name variations with more flexible matching
+    const fieldVariations: Record<string, string[]> = {
+      'bank_nbfc_name': ['bank_nbfc_name', 'bank', 'bank_name', 'nbfc_name', 'bank_nbfc', 'bank name', 'bankname'],
+      'location': ['location', 'state', 'city', 'region'],
+      'product_type': ['product_type', 'product', 'product type', 'producttype'],
+      'case_status': ['case_status', 'status', 'case status', 'casestatus'],
+      'is_repeat_case': ['is_repeat_case', 'repeat_case', 'repeat', 'repeat case', 'repeatcase'],
+      'field_verifier_name': ['field_verifier_name', 'field_verifier', 'verifier_name', 'field verifier', 'fieldverifier'],
+      'back_office_executive_name': ['back_office_executive_name', 'back_office_executive', 'executive_name', 'back office executive', 'backofficeexecutive']
+    }
+    
+    const variations = fieldVariations[schemaField] || [schemaField]
+    
+    // More flexible matching that handles spaces, underscores, and case
+    const hasField = schemaFields.some(field => {
+      const normalizedField = field.name.toLowerCase().replace(/[\s_-]/g, '')
+      return variations.some(variation => {
+        const normalizedVariation = variation.toLowerCase().replace(/[\s_-]/g, '')
+        return normalizedField === normalizedVariation
+      })
+    })
+    
+    console.log('🔍 Has field result:', hasField)
+    return hasField
+  }
 
-  // Helper to check if a field should be shown
-  const hasField = (schemaField: string) => alwaysPresentFields.includes(schemaField) || schemaFields.includes(schemaField)
+  const getFieldOptions = (fieldName: string) => {
+    const field = schemaFields.find(f => {
+      const normalizedField = f.name.toLowerCase().replace(/[\s_-]/g, '')
+      const normalizedSearch = fieldName.toLowerCase().replace(/[\s_-]/g, '')
+      return normalizedField === normalizedSearch
+    })
+    return field?.options || []
+  }
 
   return (
     <Card>
@@ -407,11 +445,23 @@ export function AdvancedFilters({
                   onChange={(e) => handleFilterChange('location', e.target.value)}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {getLocationOptions().map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="">All Locations</option>
+                  {(() => {
+                    const fieldOptions = getFieldOptions('location')
+                    if (fieldOptions.length > 0) {
+                      return fieldOptions.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))
+                    } else {
+                      return getLocationOptions().map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))
+                    }
+                  })()}
                 </select>
               </div>
             )}
@@ -419,12 +469,19 @@ export function AdvancedFilters({
             {hasField('product_type') && (
               <div className="space-y-2">
                 <Label htmlFor="productType">Product Type</Label>
-                <Input
+                <select
                   id="productType"
-                  placeholder="e.g., Auto, Home, Personal"
                   value={localFilters.productType || ''}
                   onChange={(e) => handleFilterChange('productType', e.target.value)}
-                />
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">All Products</option>
+                  {getFieldOptions('product_type').map(option => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -437,11 +494,23 @@ export function AdvancedFilters({
                   onChange={(e) => handleFilterChange('caseStatus', e.target.value)}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {getCaseStatusOptions().map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="">All Statuses</option>
+                  {(() => {
+                    const fieldOptions = getFieldOptions('case_status')
+                    if (fieldOptions.length > 0) {
+                      return fieldOptions.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))
+                    } else {
+                      return getCaseStatusOptions().map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))
+                    }
+                  })()}
                 </select>
               </div>
             )}
@@ -466,7 +535,7 @@ export function AdvancedFilters({
 
             {hasField('tat') && (
               <div className="space-y-2">
-                <Label htmlFor="isOutOfTat">TAT Status</Label>
+                <Label htmlFor="isOutOfTat">Out of TAT</Label>
                 <select
                   id="isOutOfTat"
                   value={localFilters.isOutOfTat?.toString() || ''}
@@ -505,10 +574,10 @@ export function AdvancedFilters({
 
             {hasField('back_office_executive_name') && (
               <div className="space-y-2">
-                <Label htmlFor="backOfficeExecutive">Back Office Executive Name</Label>
+                <Label htmlFor="backOfficeExecutive">Bank Office Executive Name</Label>
                 <Input
                   id="backOfficeExecutive"
-                  placeholder="Enter back office executive name"
+                  placeholder="Enter bank office executive name"
                   value={localFilters.backOfficeExecutive || ''}
                   onChange={(e) => handleFilterChange('backOfficeExecutive', e.target.value)}
                 />

@@ -150,9 +150,8 @@ export default function AdminDashboard() {
 
   const handleEntrySelect = async (entry: FormEntry) => {
     try {
-      const schemaId = typeof entry.form_schema === 'string' ? entry.form_schema : entry.form_schema?.id;
-      const schemaResponse = await apiClient.getFormSchema(schemaId);
-      setSelectedSchema(schemaResponse);
+      const response = await apiClient.viewEntryDetails(entry.id);
+      setSelectedSchema(response.schema);
       setSelectedEntry(entry);
       setShowViewModal(true);
     } catch (error) {
@@ -163,9 +162,8 @@ export default function AdminDashboard() {
 
   const handleEntryEdit = async (entry: FormEntry) => {
     try {
-      const schemaId = typeof entry.form_schema === 'string' ? entry.form_schema : entry.form_schema?.id;
-      const schemaResponse = await apiClient.getFormSchema(schemaId);
-      setSelectedSchema(schemaResponse);
+      const response = await apiClient.viewEntryDetails(entry.id);
+      setSelectedSchema(response.schema);
       setSelectedEntry(entry);
       setEditFormData(entry.form_data || {});
       setShowEditModal(true);
@@ -440,17 +438,35 @@ export default function AdminDashboard() {
 
   // Get all unique field names across all schemas
   const getAllFieldNames = () => {
-    const fieldNames = new Set<string>();
+    const fieldObjects: Array<{
+      name: string
+      field_type: string
+      options?: string[]
+    }> = [];
     
     formEntries.forEach(entry => {
       if (entry.form_schema_details && entry.form_schema_details.fields_definition) {
-        entry.form_schema_details.fields_definition.forEach((field: { name: string }) => {
-          fieldNames.add(field.name);
+        entry.form_schema_details.fields_definition.forEach((field: { 
+          name: string
+          field_type: string
+          options?: string[]
+        }) => {
+          // Check if we already have this field
+          const existingField = fieldObjects.find(f => f.name === field.name)
+          if (!existingField) {
+            fieldObjects.push({
+              name: field.name,
+              field_type: field.field_type,
+              options: field.options
+            });
+          }
         });
       }
     });
     
-    return Array.from(fieldNames).sort();
+    const result = fieldObjects.sort((a, b) => a.name.localeCompare(b.name));
+    console.log('🔍 Extracted field objects:', result);
+    return result;
   };
 
   return (
@@ -733,7 +749,7 @@ export default function AdminDashboard() {
                       fetchFormEntries()
                     }}
                     isLoading={entriesLoading}
-                    schemaFields={[]}
+                    schemaFields={getAllFieldNames()}
                     warnings={[]}
                   />
                 </div>
@@ -783,8 +799,8 @@ export default function AdminDashboard() {
                           <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Case ID</TableHead>
                           {/* Dynamic form field columns */}
                           {showFormFields && getAllFieldNames().map((fieldName) => (
-                            <TableHead key={fieldName} className="min-w-[180px] text-lg font-bold text-gray-800 py-4 px-6">
-                              {fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            <TableHead key={fieldName.name} className="min-w-[180px] text-lg font-bold text-gray-800 py-4 px-6">
+                              {fieldName.name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                             </TableHead>
                           ))}
                           <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Actions</TableHead>
@@ -850,9 +866,9 @@ export default function AdminDashboard() {
                             </TableCell>
                             {/* Dynamic form field values */}
                             {showFormFields && getAllFieldNames().map((fieldName) => (
-                              <TableCell key={fieldName} className="max-w-[200px] py-4 px-6">
-                                <div className="truncate font-medium text-gray-700" title={getFieldValue(entry, fieldName) as string}>
-                                  {getFieldValue(entry, fieldName)}
+                              <TableCell key={fieldName.name} className="max-w-[200px] py-4 px-6">
+                                <div className="truncate font-medium text-gray-700" title={getFieldValue(entry, fieldName.name) as string}>
+                                  {getFieldValue(entry, fieldName.name)}
                                 </div>
                               </TableCell>
                             ))}

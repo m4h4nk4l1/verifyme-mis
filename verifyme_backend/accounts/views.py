@@ -72,7 +72,24 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         """Set created_by field"""
+        print(f"🔍 Organization Create Debug:")
+        print(f"   - Request data: {self.request.data}")
+        print(f"   - Validated data: {serializer.validated_data}")
         serializer.save(created_by=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        """Create organization with enhanced error handling"""
+        print(f"🔍 Organization Create Request:")
+        print(f"   - Request data: {request.data}")
+        print(f"   - User: {request.user}")
+        
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print(f"❌ Organization Create Error: {str(e)}")
+            import traceback
+            print(f"❌ Full traceback: {traceback.format_exc()}")
+            raise
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):

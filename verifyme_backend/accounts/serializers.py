@@ -90,6 +90,11 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
             'admin_email', 'admin_username', 'admin_first_name', 
             'admin_last_name', 'admin_password'
         ]
+        extra_kwargs = {
+            'max_employees': {'required': False, 'default': 50},
+            'tat_hours_limit': {'required': False, 'default': 24},
+            'address_data': {'required': False, 'default': ''}
+        }
     
     def validate(self, data):
         """Validate admin user data"""
