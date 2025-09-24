@@ -16,11 +16,11 @@ class DynamicFormSchemaSerializer(serializers.ModelSerializer):
     class Meta:
         model = DynamicFormSchema
         fields = [
-            'id', 'name', 'description', 'fields_definition', 'max_fields', 'tat_hours_limit',
+            'id', 'name', 'description', 'fields_definition', 'version', 'max_fields', 'tat_hours_limit',
             'organization', 'organization_name', 'created_by', 'created_by_name',
             'is_active', 'fields_count', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'version', 'created_at', 'updated_at']
     
     def get_fields_count(self, obj):
         """Get the number of fields in the schema"""

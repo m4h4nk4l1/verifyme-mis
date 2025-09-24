@@ -33,6 +33,7 @@ from .models import DynamicFormSchema, FormEntry, FormField, FileAttachment, For
 from .serializers import (
     DynamicFormSchemaSerializer,
     DynamicFormSchemaCreateSerializer,
+    DynamicFormSchemaUpdateSerializer,
     FormEntrySerializer,
     FormEntryCreateSerializer,
     FormEntryUpdateSerializer,
@@ -120,6 +121,150 @@ class DynamicFormSchemaViewSet(viewsets.ModelViewSet):
             return
         
         serializer.save(created_by=user)
+
+    @action(detail=True, methods=['post'], url_path='mutate-fields', permission_classes=[IsAuthenticated, IsOrganizationAdmin])
+    def mutate_fields(self, request, pk=None):
+        """Mutate fields with add/remove(deprecate)/rename/reorder/update.
+        Payload shape:
+        {
+          "expected_version": 1,
+          "operations": [
+            {"op": "add", "field": {...}},
+            {"op": "deprecate", "name": "old_name"},
+            {"op": "hard_delete", "name": "field_name"},
+            {"op": "rename", "from": "old", "to": {"name": "new", ...}},
+            {"op": "reorder", "order": ["name1","name2", ...]},
+            {"op": "update", "name": "x", "changes": {"is_required": false, ...}}
+          ]
+        }
+        """
+        schema = self.get_object()
+        data = request.data or {}
+        expected_version = data.get('expected_version')
+        operations = data.get('operations', [])
+
+        # Optimistic locking
+        if expected_version is not None and int(expected_version) != int(getattr(schema, 'version', 1)):
+            return Response({
+                'error': 'version_conflict',
+                'message': 'Schema has changed; please reload and try again.',
+                'current_version': schema.version
+            }, status=status.HTTP_409_CONFLICT)
+
+        # Work on a copy
+        fields = list(schema.fields_definition or [])
+        name_to_field = {f.get('name'): f for f in fields if isinstance(f, dict) and 'name' in f}
+
+        def field_in_use(field_name: str) -> bool:
+            try:
+                return FormEntry.objects.filter(form_schema=schema).filter(form_data__has_key=field_name).exists()
+            except Exception:
+                # Fallback: scan limited set
+                for fe in FormEntry.objects.filter(form_schema=schema)[:1000]:
+                    if isinstance(fe.form_data, dict) and field_name in fe.form_data and fe.form_data[field_name] not in (None, ""):
+                        return True
+                return False
+
+        def enforce_unique(field_name: str) -> bool:
+            values = []
+            for fe in FormEntry.objects.filter(form_schema=schema).only('form_data')[:10000]:
+                v = None
+                if isinstance(fe.form_data, dict):
+                    v = fe.form_data.get(field_name)
+                if v not in (None, ""):
+                    values.append(v)
+            return len(values) == len(set(values))
+
+        def get_ordered_names() -> list:
+            return [f.get('name') for f in fields if isinstance(f, dict) and f.get('is_active', True)]
+
+        # Apply operations
+        for op in operations:
+            kind = (op or {}).get('op')
+            if kind == 'add':
+                new_field = (op or {}).get('field') or {}
+                new_name = new_field.get('name')
+                if not new_name or new_name in name_to_field:
+                    return Response({'error': f"Field name invalid or exists: {new_name}"}, status=status.HTTP_400_BAD_REQUEST)
+                # default flags
+                new_field.setdefault('is_active', True)
+                new_field.setdefault('order', len(fields))
+                fields.append(new_field)
+                name_to_field[new_name] = new_field
+
+            elif kind == 'deprecate':
+                nm = (op or {}).get('name')
+                if nm not in name_to_field:
+                    return Response({'error': f"Field not found: {nm}"}, status=status.HTTP_400_BAD_REQUEST)
+                name_to_field[nm]['is_active'] = False
+
+            elif kind == 'hard_delete':
+                nm = (op or {}).get('name')
+                if nm not in name_to_field:
+                    return Response({'error': f"Field not found: {nm}"}, status=status.HTTP_400_BAD_REQUEST)
+                if field_in_use(nm):
+                    return Response({'error': f"Cannot hard delete field '{nm}' with existing data"}, status=status.HTTP_409_CONFLICT)
+                fields = [f for f in fields if f.get('name') != nm]
+                name_to_field.pop(nm, None)
+
+            elif kind == 'rename':
+                old_nm = (op or {}).get('from')
+                to_field = (op or {}).get('to') or {}
+                new_nm = to_field.get('name')
+                if not old_nm or old_nm not in name_to_field:
+                    return Response({'error': f"Field to rename not found: {old_nm}"}, status=status.HTTP_400_BAD_REQUEST)
+                if not new_nm or new_nm in name_to_field:
+                    return Response({'error': f"New field name invalid or exists: {new_nm}"}, status=status.HTTP_400_BAD_REQUEST)
+                # add new field
+                to_field.setdefault('is_active', True)
+                to_field.setdefault('order', name_to_field[old_nm].get('order', len(fields)))
+                # link alias
+                to_field['alias_of'] = old_nm
+                fields.append(to_field)
+                name_to_field[new_nm] = to_field
+                # deprecate old
+                name_to_field[old_nm]['is_active'] = False
+
+            elif kind == 'reorder':
+                order = (op or {}).get('order') or []
+                pos = {n: i for i, n in enumerate(order)}
+                for f in fields:
+                    n = f.get('name')
+                    if n in pos:
+                        f['order'] = pos[n]
+                fields.sort(key=lambda f: f.get('order', 0))
+
+            elif kind == 'update':
+                nm = (op or {}).get('name')
+                changes = (op or {}).get('changes') or {}
+                if nm not in name_to_field:
+                    return Response({'error': f"Field not found: {nm}"}, status=status.HTTP_400_BAD_REQUEST)
+                fld = name_to_field[nm]
+                # Validate dangerous changes
+                if 'field_type' in changes and changes['field_type'] != fld.get('field_type'):
+                    if field_in_use(nm):
+                        return Response({'error': f"Cannot change type of field '{nm}' with existing data"}, status=status.HTTP_409_CONFLICT)
+                if changes.get('is_unique') is True:
+                    if not enforce_unique(nm):
+                        return Response({'error': f"Cannot enforce unique on '{nm}' due to duplicate existing values"}, status=status.HTTP_409_CONFLICT)
+                # Required toggle: allow, frontend should ensure defaults if needed
+                fld.update(changes)
+
+            else:
+                return Response({'error': f"Unsupported operation: {kind}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Max fields limit (active fields count)
+        active_count = sum(1 for f in fields if f.get('is_active', True))
+        if active_count > schema.max_fields:
+            return Response({'error': f"Active fields {active_count} exceed max_fields {schema.max_fields}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Persist
+        schema.fields_definition = fields
+        schema.version = int(getattr(schema, 'version', 1)) + 1
+        schema.save(update_fields=['fields_definition', 'version', 'updated_at'])
+
+        logger.info(f"Schema {schema.id} mutated by {request.user.id}; new version {schema.version}")
+        return Response(DynamicFormSchemaSerializer(schema, context={'request': request}).data, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):

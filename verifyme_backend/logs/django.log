@@ -26371,3 +26371,251 @@ INFO 2025-07-24 06:57:08,023 basehttp 166139 126590537168576 "POST /forms/api/en
 INFO 2025-07-24 06:57:08,023 basehttp 166139 126590753167040 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 4328
 INFO 2025-07-24 06:59:37,106 autoreload 166139 126591366628800 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
 INFO 2025-07-24 06:59:40,824 autoreload 167593 129658677896640 Watching for file changes with StatReloader
+INFO 2025-09-24 06:54:50,249 autoreload 191808 126339970692544 Watching for file changes with StatReloader
+INFO 2025-09-24 06:55:08,282 autoreload 191985 139851453584832 Watching for file changes with StatReloader
+INFO 2025-09-24 06:55:50,305 basehttp 191985 139850858079936 "OPTIONS /accounts/api/token/ HTTP/1.1" 200 0
+WARNING 2025-09-24 06:55:52,013 log 191985 139850858079936 Bad Request: /accounts/api/token/
+WARNING 2025-09-24 06:55:52,014 basehttp 191985 139850858079936 "POST /accounts/api/token/ HTTP/1.1" 400 126
+INFO 2025-09-24 06:56:03,794 basehttp 191985 139850858079936 "POST /accounts/api/token/ HTTP/1.1" 200 1076
+INFO 2025-09-24 06:56:06,485 basehttp 191985 139850858079936 "OPTIONS /accounts/api/organizations/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:56:06,487 basehttp 191985 139850778932928 "OPTIONS /accounts/api/organizations/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:56:07,375 basehttp 191985 139850858079936 "GET /accounts/api/organizations/statistics/ HTTP/1.1" 200 1058
+INFO 2025-09-24 06:56:08,173 basehttp 191985 139850778932928 "GET /accounts/api/organizations/statistics/ HTTP/1.1" 200 1058
+INFO 2025-09-24 06:56:11,880 basehttp 191985 139850778932928 "OPTIONS /accounts/api/organizations/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:56:11,880 basehttp 191985 139850858079936 "OPTIONS /accounts/api/organizations/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:56:12,599 basehttp 191985 139850858079936 "GET /accounts/api/organizations/ HTTP/1.1" 200 957
+INFO 2025-09-24 06:56:13,341 basehttp 191985 139850778932928 "GET /accounts/api/organizations/ HTTP/1.1" 200 957
+INFO 2025-09-24 06:56:21,768 basehttp 191985 139850858079936 "OPTIONS /accounts/api/users/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:56:21,769 basehttp 191985 139850778932928 "OPTIONS /accounts/api/users/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:56:22,374 basehttp 191985 139850858079936 "GET /accounts/api/users/ HTTP/1.1" 200 2200
+INFO 2025-09-24 06:56:22,957 basehttp 191985 139850778932928 "GET /accounts/api/users/ HTTP/1.1" 200 2200
+INFO 2025-09-24 06:56:47,105 basehttp 191985 139850778932928 "OPTIONS /accounts/api/users/261b88d9-df26-4850-b724-feddc149a24e/ HTTP/1.1" 200 0
+WARNING 2025-09-24 06:56:47,567 log 191985 139850778932928 Bad Request: /accounts/api/users/261b88d9-df26-4850-b724-feddc149a24e/
+WARNING 2025-09-24 06:56:47,568 basehttp 191985 139850778932928 "PUT /accounts/api/users/261b88d9-df26-4850-b724-feddc149a24e/ HTTP/1.1" 400 82
+INFO 2025-09-24 06:56:54,039 basehttp 191985 139850778932928 "PUT /accounts/api/users/261b88d9-df26-4850-b724-feddc149a24e/ HTTP/1.1" 200 527
+INFO 2025-09-24 06:56:54,640 basehttp 191985 139850778932928 "GET /accounts/api/users/ HTTP/1.1" 200 2200
+INFO 2025-09-24 06:57:05,166 basehttp 191985 139850778932928 "OPTIONS /accounts/api/users/real-time-analytics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:57:05,167 basehttp 191985 139850858079936 "OPTIONS /accounts/api/users/real-time-analytics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:57:06,232 basehttp 191985 139850778932928 "GET /accounts/api/users/real-time-analytics/ HTTP/1.1" 200 6045
+INFO 2025-09-24 06:57:07,218 basehttp 191985 139850858079936 "GET /accounts/api/users/real-time-analytics/ HTTP/1.1" 200 6045
+INFO 2025-09-24 06:57:43,967 basehttp 191985 139850858079936 "OPTIONS /accounts/api/token/ HTTP/1.1" 200 0
+WARNING 2025-09-24 06:57:44,461 log 191985 139850858079936 Bad Request: /accounts/api/token/
+WARNING 2025-09-24 06:57:44,462 basehttp 191985 139850858079936 "POST /accounts/api/token/ HTTP/1.1" 400 126
+INFO 2025-09-24 06:58:04,779 basehttp 191985 139850858079936 "POST /accounts/api/token/ HTTP/1.1" 200 1076
+INFO 2025-09-24 06:58:05,460 basehttp 191985 139850858079936 "OPTIONS /accounts/api/organizations/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:05,462 basehttp 191985 139850778932928 "OPTIONS /accounts/api/organizations/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:06,296 basehttp 191985 139850858079936 "GET /accounts/api/organizations/statistics/ HTTP/1.1" 200 1058
+INFO 2025-09-24 06:58:07,131 basehttp 191985 139850858079936 "OPTIONS /accounts/api/users/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:07,133 basehttp 191985 139850770540224 "OPTIONS /accounts/api/users/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:07,168 basehttp 191985 139850778932928 "GET /accounts/api/organizations/statistics/ HTTP/1.1" 200 1058
+INFO 2025-09-24 06:58:07,737 basehttp 191985 139850858079936 "GET /accounts/api/users/ HTTP/1.1" 200 2200
+INFO 2025-09-24 06:58:08,397 basehttp 191985 139850778932928 "GET /accounts/api/users/ HTTP/1.1" 200 2200
+INFO 2025-09-24 06:58:42,971 basehttp 191985 139850858079936 "OPTIONS /accounts/api/token/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:45,865 basehttp 191985 139850858079936 "POST /accounts/api/token/ HTTP/1.1" 200 1117
+INFO 2025-09-24 06:58:56,807 basehttp 191985 139850858079936 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:56,814 basehttp 191985 139850770540224 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:56,818 basehttp 191985 139850778932928 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:56,824 basehttp 191985 139850753754816 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:56,823 basehttp 191985 139850858079936 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:56,823 basehttp 191985 139850762147520 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:58:57,635 basehttp 191985 139850770540224 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 06:58:57,672 basehttp 191985 139850762147520 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 06:58:57,709 basehttp 191985 139850858079936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 06:58:57,710 basehttp 191985 139850745362112 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 06:58:57,719 basehttp 191985 139850753754816 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 06:58:58,443 basehttp 191985 139850770540224 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 06:59:03,751 basehttp 191985 139850770540224 "OPTIONS /accounts/api/users/profile/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:59:03,751 basehttp 191985 139850753754816 "OPTIONS /accounts/api/users/profile/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:59:04,240 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 06:59:04,304 basehttp 191985 139850753754816 "OPTIONS /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 0
+INFO 2025-09-24 06:59:04,686 basehttp 191985 139850770540224 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 06:59:04,877 basehttp 191985 139850753754816 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 52
+INFO 2025-09-24 06:59:05,446 basehttp 191985 139850770540224 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 52
+INFO 2025-09-24 06:59:50,272 basehttp 191985 139850753754816 "OPTIONS /forms/api/schemas/ HTTP/1.1" 200 0
+INFO 2025-09-24 06:59:50,929 basehttp 191985 139850753754816 "POST /forms/api/schemas/ HTTP/1.1" 201 804
+INFO 2025-09-24 06:59:51,597 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 06:59:52,224 basehttp 191985 139850753754816 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:00:06,884 basehttp 191985 139850753754816 "OPTIONS /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:00:07,534 basehttp 191985 139850753754816 "PUT /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 750
+INFO 2025-09-24 07:00:08,037 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:00:08,646 basehttp 191985 139850753754816 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:02:41,145 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:02:42,367 basehttp 191985 139850770540224 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:02:42,368 basehttp 191985 139850858079936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:02:42,392 basehttp 191985 139850762147520 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:02:42,415 basehttp 191985 139850778932928 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:02:42,423 basehttp 191985 139850753754816 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:02:43,158 basehttp 191985 139850762147520 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:02:43,739 basehttp 191985 139850762147520 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:02:44,189 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:02:44,328 basehttp 191985 139850762147520 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:02:44,914 basehttp 191985 139850753754816 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:03:02,231 basehttp 191985 139850753754816 "OPTIONS /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:03:02,917 views 191985 139850753754816 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 2
+INFO 2025-09-24 07:03:02,922 basehttp 191985 139850753754816 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 1091
+INFO 2025-09-24 07:03:03,388 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:03:04,027 basehttp 191985 139850753754816 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:05:04,107 basehttp 191985 139850753754816 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:05:05,237 basehttp 191985 139850858079936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:05:05,254 basehttp 191985 139850770540224 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:05:05,267 basehttp 191985 139850778932928 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:05:05,275 basehttp 191985 139850753754816 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:05:05,277 basehttp 191985 139850762147520 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:05:06,041 basehttp 191985 139850778932928 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:05:06,558 basehttp 191985 139850778932928 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:05:07,054 basehttp 191985 139850762147520 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:05:07,186 basehttp 191985 139850778932928 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:05:07,796 basehttp 191985 139850762147520 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1143
+INFO 2025-09-24 07:05:29,282 views 191985 139850762147520 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 3
+INFO 2025-09-24 07:05:29,290 basehttp 191985 139850762147520 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 1410
+INFO 2025-09-24 07:05:29,753 basehttp 191985 139850762147520 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:05:30,390 basehttp 191985 139850762147520 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1462
+INFO 2025-09-24 07:06:04,821 basehttp 191985 139850778932928 "OPTIONS /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 0
+INFO 2025-09-24 07:06:04,822 basehttp 191985 139850762147520 "OPTIONS /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 0
+INFO 2025-09-24 07:06:05,521 basehttp 191985 139850762147520 "GET /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 68
+INFO 2025-09-24 07:06:06,070 basehttp 191985 139850778932928 "GET /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 68
+INFO 2025-09-24 07:06:43,357 basehttp 191985 139850778932928 "OPTIONS /accounts/api/users/create-employee/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:06:45,549 basehttp 191985 139850778932928 "POST /accounts/api/users/create-employee/ HTTP/1.1" 201 152
+INFO 2025-09-24 07:06:48,059 basehttp 191985 139850778932928 "GET /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 640
+INFO 2025-09-24 07:07:03,130 basehttp 191985 139850745362112 "OPTIONS /accounts/api/token/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:05,951 basehttp 191985 139850745362112 "POST /accounts/api/token/ HTTP/1.1" 200 1162
+INFO 2025-09-24 07:07:16,610 basehttp 191985 139850745362112 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,614 basehttp 191985 139850745362112 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,614 basehttp 191985 139850736969408 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,615 basehttp 191985 139850728576704 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,621 basehttp 191985 139850736969408 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,621 basehttp 191985 139850242062016 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,622 basehttp 191985 139850728576704 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,637 basehttp 191985 139850233669312 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,646 basehttp 191985 139850225276608 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,664 basehttp 191985 139850736969408 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:16,665 basehttp 191985 139850728576704 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:17,512 basehttp 191985 139850225276608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:17,523 basehttp 191985 139850242062016 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:17,547 basehttp 191985 139850728576704 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:17,549 basehttp 191985 139850736969408 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:17,563 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:17,573 basehttp 191985 139850233669312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:18,328 basehttp 191985 139850242062016 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:18,354 basehttp 191985 139850225276608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:18,371 basehttp 191985 139850242062016 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:18,389 basehttp 191985 139850728576704 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:18,393 basehttp 191985 139850225276608 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:18,395 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:18,405 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:18,412 basehttp 191985 139850233669312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:18,414 basehttp 191985 139850242062016 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:18,437 basehttp 191985 139850225276608 "OPTIONS /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:18,447 basehttp 191985 139850736969408 "OPTIONS /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:19,069 basehttp 191985 139850233669312 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-24 07:07:19,070 basehttp 191985 139850736969408 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-24 07:07:19,163 basehttp 191985 139850728576704 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:19,166 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:19,179 basehttp 191985 139850242062016 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 52
+INFO 2025-09-24 07:07:25,683 basehttp 191985 139850745362112 "OPTIONS /accounts/api/users/profile/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:25,688 basehttp 191985 139850736969408 "OPTIONS /accounts/api/users/profile/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:26,150 basehttp 191985 139850745362112 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-24 07:07:26,153 basehttp 191985 139850728576704 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-24 07:07:26,162 basehttp 191985 139850728576704 "OPTIONS /forms/api/schemas/?is_active=true HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:26,204 basehttp 191985 139850745362112 "OPTIONS /forms/api/schemas/?is_active=true HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:26,752 basehttp 191985 139850745362112 "GET /forms/api/schemas/?is_active=true HTTP/1.1" 200 1462
+INFO 2025-09-24 07:07:26,752 basehttp 191985 139850728576704 "GET /forms/api/schemas/?is_active=true HTTP/1.1" 200 1462
+INFO 2025-09-24 07:07:49,710 basehttp 191985 139850728576704 "OPTIONS /forms/api/entries/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:50,155 views 191985 139850745362112 🔍 Form entry creation request from user: employee@alice.com
+INFO 2025-09-24 07:07:50,156 views 191985 139850745362112 🔍 Request method: POST
+INFO 2025-09-24 07:07:50,156 views 191985 139850745362112 🔍 Request path: /forms/api/entries/
+INFO 2025-09-24 07:07:50,157 views 191985 139850745362112 🔍 Request data: {'form_schema': '59923a79-193b-40d2-a7ab-5b970a03d9f0', 'form_data': {'customer_name': 'phani', 'pan card': 'fnrop23d', 'aadhar card': '9282872222'}}
+INFO 2025-09-24 07:07:50,157 views 191985 139850745362112 🔍 Request content type: application/json
+INFO 2025-09-24 07:07:50,158 views 191985 139850745362112 🔍 Request headers: {'Content-Length': '141', 'Content-Type': 'application/json', 'Host': 'localhost:8000', 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0', 'Accept': 'application/json, text/plain, */*', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate, br, zstd', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4NjgxNDI1LCJpYXQiOjE3NTg2Nzc4MjUsImp0aSI6ImJhZTc5MjdiNTcwYzRmM2Y5MDRkNzY4ODRmYWQ2ZWQ1IiwidXNlcl9pZCI6ImM0YzA4NmMzLWUwNjMtNGE4Ni05Y2FlLTdmOTc4MzZiNDgyZiJ9.2JkrMfxt4x0dkPpcGjr03c9sCCY9vSDx3hN9JduUGow', 'Origin': 'http://localhost:3000', 'Sec-Gpc': '1', 'Connection': 'keep-alive', 'Referer': 'http://localhost:3000/', 'Sec-Fetch-Dest': 'empty', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Site': 'same-site', 'Priority': 'u=0'}
+INFO 2025-09-24 07:07:50,158 views 191985 139850745362112 🔍 Serializer created successfully
+INFO 2025-09-24 07:07:50,207 serializers 191985 139850745362112 🔍 Validating form entry data: {'form_schema': <DynamicFormSchema: Alice - alicesoft>, 'form_data': {'customer_name': 'phani', 'pan card': 'fnrop23d', 'aadhar card': '9282872222'}}
+INFO 2025-09-24 07:07:50,208 serializers 191985 139850745362112 ✅ Form schema validation passed: 59923a79-193b-40d2-a7ab-5b970a03d9f0
+INFO 2025-09-24 07:07:50,208 serializers 191985 139850745362112 ✅ Form data validation passed: {'customer_name': 'phani', 'pan card': 'fnrop23d', 'aadhar card': '9282872222'}
+INFO 2025-09-24 07:07:50,208 views 191985 139850745362112 ✅ Serializer validation passed
+INFO 2025-09-24 07:07:50,209 views 191985 139850745362112 🔍 Starting form entry creation for user: employee@alice.com
+INFO 2025-09-24 07:07:50,209 views 191985 139850745362112 🔍 User role: EMPLOYEE
+INFO 2025-09-24 07:07:50,251 views 191985 139850745362112 🔍 User organization: alicesoft
+INFO 2025-09-24 07:07:50,498 views 191985 139850745362112 ✅ Form entry created successfully: 51140a62-292b-4b5b-9ff6-f8bb57baa5e1
+INFO 2025-09-24 07:07:50,498 views 191985 139850745362112 ✅ Entry ID: 1
+INFO 2025-09-24 07:07:50,499 views 191985 139850745362112 ✅ Case ID: 1
+INFO 2025-09-24 07:07:50,499 views 191985 139850745362112 ✅ Form schema: Alice - alicesoft
+INFO 2025-09-24 07:07:50,499 views 191985 139850745362112 🔄 Updating file records for form entry: 51140a62-292b-4b5b-9ff6-f8bb57baa5e1
+INFO 2025-09-24 07:07:50,499 views 191985 139850745362112 📋 Form data: {'customer_name': 'phani', 'pan card': 'fnrop23d', 'aadhar card': '9282872222'}
+INFO 2025-09-24 07:07:50,499 views 191985 139850745362112 📋 Total files to update: 0
+INFO 2025-09-24 07:07:50,499 views 191985 139850745362112 ✅ Successfully updated 0 out of 0 files
+INFO 2025-09-24 07:07:50,500 views 191985 139850745362112 ✅ Form entry creation completed successfully: 51140a62-292b-4b5b-9ff6-f8bb57baa5e1
+INFO 2025-09-24 07:07:50,500 views 191985 139850745362112 ✅ Form entry created successfully: 51140a62-292b-4b5b-9ff6-f8bb57baa5e1
+INFO 2025-09-24 07:07:50,502 basehttp 191985 139850745362112 "POST /forms/api/entries/ HTTP/1.1" 201 314
+INFO 2025-09-24 07:07:53,820 basehttp 191985 139850728576704 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:53,869 basehttp 191985 139850225276608 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:54,023 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:54,055 basehttp 191985 139850233669312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:54,068 basehttp 191985 139850242062016 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:54,101 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:54,726 basehttp 191985 139850225276608 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:54,854 basehttp 191985 139850728576704 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:54,907 basehttp 191985 139850745362112 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:07:55,045 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:55,066 basehttp 191985 139850233669312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:55,067 basehttp 191985 139850242062016 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:55,528 basehttp 191985 139850745362112 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-24 07:07:55,738 basehttp 191985 139850242062016 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-24 07:07:55,763 basehttp 191985 139850225276608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:55,921 basehttp 191985 139850728576704 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:56,086 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 2773
+INFO 2025-09-24 07:07:56,291 basehttp 191985 139850233669312 "OPTIONS /forms/api/entries/51140a62-292b-4b5b-9ff6-f8bb57baa5e1/view-details/ HTTP/1.1" 200 0
+INFO 2025-09-24 07:07:56,994 basehttp 191985 139850745362112 "GET /forms/api/entries/51140a62-292b-4b5b-9ff6-f8bb57baa5e1/view-details/ HTTP/1.1" 200 3816
+INFO 2025-09-24 07:08:22,383 basehttp 191985 139850778932928 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:08:22,830 basehttp 191985 139850762147520 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:08:22,962 basehttp 191985 139850778932928 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1462
+INFO 2025-09-24 07:08:23,592 basehttp 191985 139850762147520 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1462
+INFO 2025-09-24 07:08:36,854 views 191985 139850762147520 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 4
+INFO 2025-09-24 07:08:36,862 basehttp 191985 139850762147520 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 1719
+INFO 2025-09-24 07:08:37,363 basehttp 191985 139850762147520 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-24 07:08:37,974 basehttp 191985 139850762147520 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 1771
+INFO 2025-09-24 07:08:45,834 basehttp 191985 139850745362112 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-24 07:08:45,839 basehttp 191985 139850242062016 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-24 07:08:46,398 basehttp 191985 139850745362112 "GET /forms/api/schemas/?is_active=true HTTP/1.1" 200 1771
+INFO 2025-09-24 07:08:46,400 basehttp 191985 139850225276608 "GET /forms/api/schemas/?is_active=true HTTP/1.1" 200 1771
+INFO 2025-09-24 07:09:02,090 views 191985 139850745362112 🔍 Form entry creation request from user: employee@alice.com
+INFO 2025-09-24 07:09:02,091 views 191985 139850745362112 🔍 Request method: POST
+INFO 2025-09-24 07:09:02,091 views 191985 139850745362112 🔍 Request path: /forms/api/entries/
+INFO 2025-09-24 07:09:02,092 views 191985 139850745362112 🔍 Request data: {'form_schema': '59923a79-193b-40d2-a7ab-5b970a03d9f0', 'form_data': {'customer_name': 'madhava', 'pan card': 'ik939djj', 'aadhar card': '902839872983', 'mobile': '2343433333'}}
+INFO 2025-09-24 07:09:02,092 views 191985 139850745362112 🔍 Request content type: application/json
+INFO 2025-09-24 07:09:02,093 views 191985 139850745362112 🔍 Request headers: {'Content-Length': '167', 'Content-Type': 'application/json', 'Host': 'localhost:8000', 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0', 'Accept': 'application/json, text/plain, */*', 'Accept-Language': 'en-US,en;q=0.5', 'Accept-Encoding': 'gzip, deflate, br, zstd', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4NjgxNDI1LCJpYXQiOjE3NTg2Nzc4MjUsImp0aSI6ImJhZTc5MjdiNTcwYzRmM2Y5MDRkNzY4ODRmYWQ2ZWQ1IiwidXNlcl9pZCI6ImM0YzA4NmMzLWUwNjMtNGE4Ni05Y2FlLTdmOTc4MzZiNDgyZiJ9.2JkrMfxt4x0dkPpcGjr03c9sCCY9vSDx3hN9JduUGow', 'Origin': 'http://localhost:3000', 'Sec-Gpc': '1', 'Connection': 'keep-alive', 'Referer': 'http://localhost:3000/', 'Sec-Fetch-Dest': 'empty', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Site': 'same-site', 'Priority': 'u=0'}
+INFO 2025-09-24 07:09:02,093 views 191985 139850745362112 🔍 Serializer created successfully
+INFO 2025-09-24 07:09:02,144 serializers 191985 139850745362112 🔍 Validating form entry data: {'form_schema': <DynamicFormSchema: Alice - alicesoft>, 'form_data': {'customer_name': 'madhava', 'pan card': 'ik939djj', 'aadhar card': '902839872983', 'mobile': '2343433333'}}
+INFO 2025-09-24 07:09:02,145 serializers 191985 139850745362112 ✅ Form schema validation passed: 59923a79-193b-40d2-a7ab-5b970a03d9f0
+INFO 2025-09-24 07:09:02,145 serializers 191985 139850745362112 ✅ Form data validation passed: {'customer_name': 'madhava', 'pan card': 'ik939djj', 'aadhar card': '902839872983', 'mobile': '2343433333'}
+INFO 2025-09-24 07:09:02,146 views 191985 139850745362112 ✅ Serializer validation passed
+INFO 2025-09-24 07:09:02,146 views 191985 139850745362112 🔍 Starting form entry creation for user: employee@alice.com
+INFO 2025-09-24 07:09:02,146 views 191985 139850745362112 🔍 User role: EMPLOYEE
+INFO 2025-09-24 07:09:02,193 views 191985 139850745362112 🔍 User organization: alicesoft
+INFO 2025-09-24 07:09:02,451 views 191985 139850745362112 ✅ Form entry created successfully: bc74ca8c-73d7-40af-8f41-45a31422ea8c
+INFO 2025-09-24 07:09:02,451 views 191985 139850745362112 ✅ Entry ID: 2
+INFO 2025-09-24 07:09:02,451 views 191985 139850745362112 ✅ Case ID: 2
+INFO 2025-09-24 07:09:02,452 views 191985 139850745362112 ✅ Form schema: Alice - alicesoft
+INFO 2025-09-24 07:09:02,452 views 191985 139850745362112 🔄 Updating file records for form entry: bc74ca8c-73d7-40af-8f41-45a31422ea8c
+INFO 2025-09-24 07:09:02,452 views 191985 139850745362112 📋 Form data: {'customer_name': 'madhava', 'pan card': 'ik939djj', 'aadhar card': '902839872983', 'mobile': '2343433333'}
+INFO 2025-09-24 07:09:02,453 views 191985 139850745362112 📋 Total files to update: 0
+INFO 2025-09-24 07:09:02,453 views 191985 139850745362112 ✅ Successfully updated 0 out of 0 files
+INFO 2025-09-24 07:09:02,453 views 191985 139850745362112 ✅ Form entry creation completed successfully: bc74ca8c-73d7-40af-8f41-45a31422ea8c
+INFO 2025-09-24 07:09:02,453 views 191985 139850745362112 ✅ Form entry created successfully: bc74ca8c-73d7-40af-8f41-45a31422ea8c
+INFO 2025-09-24 07:09:02,455 basehttp 191985 139850745362112 "POST /forms/api/entries/ HTTP/1.1" 201 340
+INFO 2025-09-24 07:09:05,011 basehttp 191985 139850745362112 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:09:05,059 basehttp 191985 139850242062016 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:09:05,295 basehttp 191985 139850225276608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:05,360 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:05,360 basehttp 191985 139850233669312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:05,399 basehttp 191985 139850728576704 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:05,914 basehttp 191985 139850242062016 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:09:06,200 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:06,266 basehttp 191985 139850728576704 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 153
+INFO 2025-09-24 07:09:06,532 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:06,536 basehttp 191985 139850225276608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:06,556 basehttp 191985 139850233669312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:06,892 basehttp 191985 139850728576704 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-24 07:09:07,105 basehttp 191985 139850242062016 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:07,175 basehttp 191985 139850225276608 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-24 07:09:07,349 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-24 07:09:07,718 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165

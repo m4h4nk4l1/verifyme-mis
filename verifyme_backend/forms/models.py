@@ -36,6 +36,7 @@ class DynamicFormSchema(models.Model):
     description = models.TextField(blank=True)
     organization = models.ForeignKey('accounts.Organization', on_delete=models.CASCADE, related_name='form_schemas')
     fields_definition = models.JSONField(default=list)  # List of field definitions
+    version = models.PositiveIntegerField(default=1)
     max_fields = models.PositiveIntegerField(default=120, validators=[MinValueValidator(1), MaxValueValidator(120)])
     tat_hours_limit = models.PositiveIntegerField(default=24, help_text="TAT hours limit for this form schema")
     is_active = models.BooleanField(default=True)
