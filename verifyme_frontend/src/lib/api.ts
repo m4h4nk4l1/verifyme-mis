@@ -272,6 +272,12 @@ export const apiClient = {
     return response.data;
   },
 
+  // Mutate schema fields (versioned operations)
+  mutateFormSchema: async (id: string, payload: { expected_version: number; operations: unknown[] }) => {
+    const response = await api.post(`/forms/api/schemas/${id}/mutate-fields/`, payload);
+    return response.data;
+  },
+
   // Form Entries
   getFormEntries: async (params?: Record<string, unknown>) => {
     try {

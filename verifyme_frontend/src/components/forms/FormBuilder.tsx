@@ -70,7 +70,56 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
 
   const handleUpdateSchema = async (schemaId: string, schemaData: Partial<FormSchema>) => {
     try {
-      await apiClient.updateFormSchema(schemaId, schemaData)
+      // Use the new mutate endpoint for field changes
+      const original = editingSchema?.fields_definition || []
+      const edited = schemaData.fields_definition || []
+      
+      const origByName = new Map(original.map(f => [f.name, f]))
+      const editByName = new Map(edited.map(f => [f.name, f]))
+      
+      const operations: any[] = []
+      
+      // Add new fields
+      for (const f of edited) {
+        if (!origByName.has(f.name)) {
+          operations.push({ op: 'add', field: f })
+        }
+      }
+      
+      // Deprecate removed fields
+      for (const f of original) {
+        if (!editByName.has(f.name)) {
+          operations.push({ op: 'deprecate', name: f.name })
+        }
+      }
+      
+      // Reorder (active fields only)
+      const order = edited.filter(f => f.is_active !== false).map(f => f.name)
+      if (order.length > 0) {
+        operations.push({ op: 'reorder', order })
+      }
+      
+      // Update changed props
+      for (const f of edited) {
+        const prev = origByName.get(f.name)
+        if (prev) {
+          const changes: any = {}
+          for (const key of ['display_name','field_type','is_required','is_unique','default_value','help_text','validation_rules','is_active']) {
+            if (JSON.stringify(prev[key]) !== JSON.stringify(f[key])) {
+              changes[key] = f[key]
+            }
+          }
+          if (Object.keys(changes).length) {
+            operations.push({ op: 'update', name: f.name, changes })
+          }
+        }
+      }
+      
+      if (operations.length > 0) {
+        const expected_version = (editingSchema as any)?.version || 1
+        await apiClient.mutateFormSchema(schemaId, { expected_version, operations })
+      }
+      
       setEditingSchema(null)
       fetchSchemas()
     } catch (error) {
@@ -334,10 +383,10 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
         </h3>
         
         {isExistingSchema && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> For existing schemas, you can only modify basic properties and reorder fields. 
-              Adding, removing, or modifying field properties is not allowed to maintain data integrity.
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> You can now add, remove, and modify fields in existing schemas. 
+              Removed fields will be deprecated (hidden from new entries but preserved for existing data).
             </p>
           </div>
         )}
@@ -405,8 +454,8 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
               </span>
             </div>
 
-            {/* Add New Field - Only for new schemas */}
-            {!isExistingSchema && formData.fields_definition.length < formData.max_fields && (
+            {/* Add New Field - Available for both new and existing schemas */}
+            {formData.fields_definition.length < formData.max_fields && (
               <Card className="mb-4">
                 <CardHeader>
                   <CardTitle className="text-sm">Add New Field</CardTitle>
@@ -559,18 +608,17 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
                           >
                             <ArrowDown className="h-4 w-4" />
                           </Button>
-                          {/* Only show remove button for new schemas */}
-                          {!isExistingSchema && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveField(index)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
+                          {/* Remove button - now available for existing schemas too (deprecates field) */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveField(index)}
+                            className="text-red-600 hover:text-red-700"
+                            title={isExistingSchema ? "Remove field (will be deprecated)" : "Remove field"}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardContent>

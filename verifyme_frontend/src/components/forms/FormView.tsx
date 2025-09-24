@@ -71,7 +71,10 @@ export function FormView({
   useEffect(() => {
     if (selectedSchema && selectedSchema.fields_definition) {
       const initialData: Record<string, unknown> = {}
-      selectedSchema.fields_definition.forEach((field: FormField) => {
+      // Only include active fields for create/edit
+      selectedSchema.fields_definition
+        .filter((field: FormField) => (field as any).is_active !== false)
+        .forEach((field: FormField) => {
         if (field.default_value) {
           initialData[field.name] = field.default_value
         }

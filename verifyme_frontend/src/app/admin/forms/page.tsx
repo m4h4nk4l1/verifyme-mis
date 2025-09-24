@@ -155,10 +155,54 @@ export default function FormsPage() {
     if (!editingSchema) return
 
     try {
-      await apiClient.updateFormSchema(editingSchema.id, {
-        ...editingSchema,
-        fields_definition: schemaFormData.fields_definition
-      })
+      // Compute simple operations: compare original vs edited
+      const original = (editingSchema.fields_definition || []) as any[]
+      const edited = (schemaFormData.fields_definition || []) as any[]
+
+      const origByName = new Map(original.map(f => [f.name, f]))
+      const editByName = new Map(edited.map(f => [f.name, f]))
+
+      const operations: any[] = []
+
+      // Add new fields
+      for (const f of edited) {
+        if (!origByName.has(f.name)) {
+          operations.push({ op: 'add', field: f })
+        }
+      }
+
+      // Deprecate removed fields
+      for (const f of original) {
+        if (!editByName.has(f.name)) {
+          operations.push({ op: 'deprecate', name: f.name })
+        }
+      }
+
+      // Reorder (active fields only)
+      const order = edited.filter(f => f.is_active !== false).map(f => f.name)
+      if (order.length > 0) {
+        operations.push({ op: 'reorder', order })
+      }
+
+      // Update changed props (basic check)
+      for (const f of edited) {
+        const prev = origByName.get(f.name)
+        if (prev) {
+          const changes: any = {}
+          for (const key of ['display_name','field_type','is_required','is_unique','default_value','help_text','validation_rules','is_active']) {
+            if (JSON.stringify(prev[key]) !== JSON.stringify(f[key])) {
+              changes[key] = f[key]
+            }
+          }
+          if (Object.keys(changes).length) {
+            operations.push({ op: 'update', name: f.name, changes })
+          }
+        }
+      }
+
+      const expected_version = (editingSchema as any).version || 1
+      await apiClient.mutateFormSchema(editingSchema.id, { expected_version, operations })
+
       toast.success('Form schema updated successfully')
       setEditingSchema(null)
       setSchemaFormData({
