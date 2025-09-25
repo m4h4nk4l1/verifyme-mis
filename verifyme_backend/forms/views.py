@@ -48,10 +48,43 @@ from .serializers import (
     FormFieldFileUpdateSerializer
 )
 from accounts.permissions import IsOrganizationAdmin
+from functools import wraps
 from utils.storage import S3FileManager
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+def require_password_verification(view_func):
+    """Decorator to require password verification for sensitive operations like export"""
+    @wraps(view_func)
+    def wrapper(self, request, *args, **kwargs):
+        logger.info(f"🔐 Password verification decorator called for {view_func.__name__}")
+        logger.info(f"🔐 Request data: {request.data}")
+        logger.info(f"🔐 User: {request.user.email}")
+        
+        # Check if password verification is provided
+        password = request.data.get('password')
+        logger.info(f"🔐 Password provided: {'YES' if password else 'NO'}")
+        
+        if not password:
+            logger.warning(f"🔐 Password verification failed: No password provided")
+            return Response(
+                {'error': 'Password verification is required for this operation'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verify password
+        if not request.user.check_password(password):
+            logger.warning(f"🔐 Password verification failed: Invalid password for user {request.user.email}")
+            return Response(
+                {'error': 'Invalid password'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        logger.info(f"🔐 Password verification successful for user {request.user.email}")
+        # Password verified, proceed with the original function
+        return view_func(self, request, *args, **kwargs)
+    return wrapper
 
 class DynamicFormSchemaViewSet(viewsets.ModelViewSet):
     """ViewSet for DynamicFormSchema management"""
@@ -184,19 +217,41 @@ class DynamicFormSchemaViewSet(viewsets.ModelViewSet):
             if kind == 'add':
                 new_field = (op or {}).get('field') or {}
                 new_name = new_field.get('name')
-                if not new_name or new_name in name_to_field:
-                    return Response({'error': f"Field name invalid or exists: {new_name}"}, status=status.HTTP_400_BAD_REQUEST)
-                # default flags
-                new_field.setdefault('is_active', True)
-                new_field.setdefault('order', len(fields))
-                fields.append(new_field)
-                name_to_field[new_name] = new_field
+                if not new_name:
+                    return Response({'error': f"Field name is required"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Check if field exists (active or deprecated)
+                if new_name in name_to_field:
+                    existing_field = name_to_field[new_name]
+                    # If field exists but is deprecated, reactivate it instead of creating new
+                    if not existing_field.get('is_active', True):
+                        existing_field.update(new_field)
+                        existing_field['is_active'] = True
+                        existing_field.setdefault('order', len([f for f in fields if f.get('is_active', True)]))
+                        logger.info(f"Reactivated deprecated field: {new_name}")
+                    else:
+                        return Response({'error': f"Field name already exists (active): {new_name}"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # Create new field
+                    new_field.setdefault('is_active', True)
+                    new_field.setdefault('order', len([f for f in fields if f.get('is_active', True)]))
+                    fields.append(new_field)
+                    name_to_field[new_name] = new_field
 
             elif kind == 'deprecate':
                 nm = (op or {}).get('name')
                 if nm not in name_to_field:
                     return Response({'error': f"Field not found: {nm}"}, status=status.HTTP_400_BAD_REQUEST)
                 name_to_field[nm]['is_active'] = False
+
+            elif kind == 'reactivate':
+                nm = (op or {}).get('name')
+                if nm not in name_to_field:
+                    return Response({'error': f"Field not found: {nm}"}, status=status.HTTP_400_BAD_REQUEST)
+                if name_to_field[nm].get('is_active', True):
+                    return Response({'error': f"Field '{nm}' is already active"}, status=status.HTTP_400_BAD_REQUEST)
+                name_to_field[nm]['is_active'] = True
+                logger.info(f"Reactivated field: {nm}")
 
             elif kind == 'hard_delete':
                 nm = (op or {}).get('name')
@@ -1837,14 +1892,18 @@ class FormEntryExportView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
+    @require_password_verification
     def post(self, request):
         """Export form entries based on filters"""
         user = request.user
         export_format = request.data.get('format', 'excel')
         filters = request.data.get('filters', {})
         options = request.data.get('options', {})
+        password = request.data.get('password', 'NOT_PROVIDED')
         
-        logger.info(f"Export request from user {user.email}: format={export_format}, filters={filters}")
+        logger.info(f"🔐 Export request from user {user.email}: format={export_format}, filters={filters}")
+        logger.info(f"🔐 Password provided: {'YES' if password != 'NOT_PROVIDED' else 'NO'}")
+        logger.info(f"🔐 Request data keys: {list(request.data.keys())}")
         
         # Get filtered entries
         if user.role == 'SUPER_ADMIN':
@@ -2428,6 +2487,7 @@ class EnhancedFormEntryExportView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
+    @require_password_verification
     def post(self, request):
         """Export form entries with advanced filtering"""
         user = request.user

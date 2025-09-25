@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AdvancedFilters, FormEntryFilters } from './AdvancedFilters';
+import { ExportWithPasswordVerification } from '@/components/ui/ExportWithPasswordVerification';
 import { 
   Search, 
   Filter, 
@@ -120,7 +121,7 @@ const EditModal = ({ entry, schema, onSave, onClose }: {
   const removeFile = (fieldName: string) => {
     setFormData(prev => ({ ...prev, [fieldName]: '' }));
   };
-
+  
   const handleSave = () => {
     onSave(formData);
   };
@@ -324,9 +325,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       } else {
         // Use basic filtering
         response = await apiClient.getFormEntries({
-          search: search || searchTerm,
-          ...(filterParams || filters)
-        });
+        search: search || searchTerm,
+        ...(filterParams || filters)
+      });
       }
       
       setFormEntries(response.results || response);
@@ -353,9 +354,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
               field_type: string
               options?: string[]
             }> = [];
-            response.results.forEach((entry: FormEntry) => {
-              if (entry.form_data) {
-                Object.keys(entry.form_data).forEach(field => {
+        response.results.forEach((entry: FormEntry) => {
+          if (entry.form_data) {
+            Object.keys(entry.form_data).forEach(field => {
                   // Filter out test fields and common unwanted fields
                   if (!field.includes('test') && 
                       !field.includes('Test') && 
@@ -367,13 +368,13 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                       name: field,
                       field_type: 'STRING',
                       options: undefined
-                    });
-                  }
-                });
+            });
+          }
+        });
               }
             });
             const sortedFields = allFields.sort((a, b) => a.name.localeCompare(b.name));
-            setSchemaFields(sortedFields);
+        setSchemaFields(sortedFields);
           }
         }
       }
@@ -788,12 +789,15 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
     }
   };
 
-  // Export functions with date filtering
-  const exportAsCSV = async () => {
+  // Export functions with date filtering and password verification
+  const exportAsCSV = async (password: string) => {
     try {
+      console.log('🚀 Starting CSV export with password verification...')
       setExportLoading(true);
-      const blob = await apiClient.exportData({
+      
+      const exportPayload = {
         format: 'csv',
+        password: password, // Include password for verification
         filters: {
           date_range: dateRange,
           custom_start_date: customStartDate,
@@ -805,7 +809,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
           include_files: true,
           include_attachments: true,
         }
-      });
+      };
+      
+      console.log('📤 Sending export request:', exportPayload)
+      const blob = await apiClient.exportData(exportPayload);
+      console.log('📥 Received export response:', blob)
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -819,17 +827,31 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       toast.success('CSV exported successfully');
     } catch (error) {
       console.error('CSV export error:', error);
-      toast.error('Failed to export CSV');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: { error?: string }, status?: number } }
+        if (errorResponse.response?.status === 401) {
+          toast.error('Invalid password. Please try again.');
+        } else if (errorResponse.response?.status === 400) {
+          toast.error('Password verification is required for export.');
+        } else {
+          toast.error(errorResponse.response?.data?.error || 'Failed to export CSV');
+        }
+      } else {
+        toast.error('Failed to export CSV');
+      }
     } finally {
       setExportLoading(false);
     }
   };
 
-  const exportAsExcel = async () => {
+  const exportAsExcel = async (password: string) => {
     try {
+      console.log('🚀 Starting Excel export with password verification...')
       setExportLoading(true);
-      const blob = await apiClient.exportData({
+      
+      const exportPayload = {
         format: 'excel',
+        password: password, // Include password for verification
         filters: {
           date_range: dateRange,
           custom_start_date: customStartDate,
@@ -841,7 +863,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
           include_files: true,
           include_attachments: true,
         }
-      });
+      };
+      
+      console.log('📤 Sending export request:', exportPayload)
+      const blob = await apiClient.exportData(exportPayload);
+      console.log('📥 Received export response:', blob)
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -855,17 +881,31 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       toast.success('Excel exported successfully');
     } catch (error) {
       console.error('Excel export error:', error);
-      toast.error('Failed to export Excel');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: { error?: string }, status?: number } }
+        if (errorResponse.response?.status === 401) {
+          toast.error('Invalid password. Please try again.');
+        } else if (errorResponse.response?.status === 400) {
+          toast.error('Password verification is required for export.');
+        } else {
+          toast.error(errorResponse.response?.data?.error || 'Failed to export Excel');
+        }
+      } else {
+        toast.error('Failed to export Excel');
+      }
     } finally {
       setExportLoading(false);
     }
   };
 
-  const exportAsPDF = async () => {
+  const exportAsPDF = async (password: string) => {
     try {
+      console.log('🚀 Starting PDF export with password verification...')
       setExportLoading(true);
-      const blob = await apiClient.exportData({
+      
+      const exportPayload = {
         format: 'pdf',
+        password: password, // Include password for verification
         filters: {
           date_range: dateRange,
           custom_start_date: customStartDate,
@@ -877,7 +917,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
           include_files: true,
           include_attachments: true,
         }
-      });
+      };
+      
+      console.log('📤 Sending export request:', exportPayload)
+      const blob = await apiClient.exportData(exportPayload);
+      console.log('📥 Received export response:', blob)
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -891,7 +935,18 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
       toast.success('PDF exported successfully');
     } catch (error) {
       console.error('PDF export error:', error);
-      toast.error('Failed to export PDF');
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: { error?: string }, status?: number } }
+        if (errorResponse.response?.status === 401) {
+          toast.error('Invalid password. Please try again.');
+        } else if (errorResponse.response?.status === 400) {
+          toast.error('Password verification is required for export.');
+        } else {
+          toast.error(errorResponse.response?.data?.error || 'Failed to export PDF');
+        }
+      } else {
+        toast.error('Failed to export PDF');
+      }
     } finally {
       setExportLoading(false);
     }
@@ -1082,9 +1137,13 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
             </div>
             
             <div className="flex items-center space-x-2 flex-shrink-0">
+            <ExportWithPasswordVerification
+              onExport={exportAsCSV}
+              exportType="csv"
+              className="flex items-center space-x-2"
+            >
               <Button 
                 variant="outline"
-                onClick={exportAsCSV}
                 disabled={exportLoading}
                 className="flex items-center space-x-2"
               >
@@ -1095,10 +1154,15 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                 )}
                 Export CSV
               </Button>
-              
+            </ExportWithPasswordVerification>
+            
+            <ExportWithPasswordVerification
+              onExport={exportAsExcel}
+              exportType="excel"
+              className="flex items-center space-x-2"
+            >
               <Button 
                 variant="outline"
-                onClick={exportAsExcel}
                 disabled={exportLoading}
                 className="flex items-center space-x-2"
               >
@@ -1109,10 +1173,15 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                 )}
                 Export Excel
               </Button>
-              
+            </ExportWithPasswordVerification>
+            
+            <ExportWithPasswordVerification
+              onExport={exportAsPDF}
+              exportType="pdf"
+              className="flex items-center space-x-2"
+            >
               <Button 
                 variant="outline"
-                onClick={exportAsPDF}
                 disabled={exportLoading}
                 className="flex items-center space-x-2"
               >
@@ -1123,6 +1192,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                 )}
                 Export PDF
               </Button>
+            </ExportWithPasswordVerification>
             </div>
           </div>
 
@@ -1140,8 +1210,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                 isLoading={entriesLoading}
                 schemaFields={schemaFields}
                 warnings={[]}
-              />
-            </div>
+                  />
+                </div>
           )}
         </CardContent>
       </Card>
@@ -1155,12 +1225,12 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
               <CardDescription className="text-gray-600">
                 Manage and track your form entries with advanced filtering
               </CardDescription>
-            </div>
-            
+                </div>
+                
             <div className="flex items-center space-x-4 flex-shrink-0">
               <div className="text-sm text-gray-600 font-medium whitespace-nowrap">
                 Total: {totalEntries} entries
-              </div>
+                </div>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -1170,9 +1240,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
               >
                 <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
                 Refresh
-              </Button>
+                </Button>
+              </div>
             </div>
-          </div>
         </CardHeader>
         <CardContent className="max-w-full overflow-hidden">
           {/* Enhanced Table */}
@@ -1181,7 +1251,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
               <div className="flex items-center space-x-3">
                 <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                 <span className="text-lg font-medium text-gray-700">Loading entries...</span>
-              </div>
+        </div>
             </div>
           ) : formEntries.length === 0 ? (
             <div className="text-center py-12">
@@ -1211,7 +1281,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">STATUS</TableHead>
                             <TableHead className="text-left py-4 px-4 font-semibold text-gray-700 text-sm bg-white whitespace-nowrap">EMPLOYEE</TableHead>
                             {/* Dynamic schema fields */}
-                            {schemaFields.map((field) => (
+                    {schemaFields.map((field) => (
                               <TableHead key={field.name} className="text-left py-4 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap bg-white">
                                 {field.name.toUpperCase().replace(/_/g, ' ')}
                               </TableHead>
@@ -1292,64 +1362,64 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="py-4 px-4 text-sm text-gray-600 whitespace-nowrap">
-                                  {entry.created_at ? formatDate(entry.created_at) : 'N/A'}
+                        {entry.created_at ? formatDate(entry.created_at) : 'N/A'}
                                 </TableCell>
                                 <TableCell className="py-4 px-4 whitespace-nowrap">
-                                  <Badge 
-                                    variant={entry.status === 'completed' ? 'default' : 'secondary'}
+                        <Badge 
+                          variant={entry.status === 'completed' ? 'default' : 'secondary'}
                                     className={`capitalize text-xs ${
                                       isOutOfTat && (entry.status === 'pending' || entry.status === 'completed')
                                         ? 'bg-red-100 text-red-800 border-red-200' 
                                         : ''
                                     }`}
-                                  >
-                                    {entry.status || 'pending'}
-                                  </Badge>
+                        >
+                          {entry.status || 'pending'}
+                        </Badge>
                                 </TableCell>
                                 <TableCell className="py-4 px-4 whitespace-nowrap">
-                                  <div>
+                        <div>
                                     <p className="font-medium text-sm">
-                                      {entry.employee?.first_name && entry.employee?.last_name 
-                                        ? `${entry.employee.first_name} ${entry.employee.last_name}`
-                                        : entry.employee?.username || 'N/A'
-                                      }
-                                    </p>
+                            {entry.employee?.first_name && entry.employee?.last_name 
+                              ? `${entry.employee.first_name} ${entry.employee.last_name}`
+                              : entry.employee?.username || 'N/A'
+                            }
+                          </p>
                                     <p className="text-xs text-gray-500">{entry.employee?.email || 'N/A'}</p>
-                                  </div>
+                        </div>
                                 </TableCell>
                                 {/* Dynamic schema field values */}
-                                {schemaFields.map((field) => (
+                      {schemaFields.map((field) => (
                                   <TableCell key={field.name} className="py-4 px-4">
                                     <div className="max-w-xs truncate" title={field.name}>
                                       {getFieldValue(field.name)}
-                                    </div>
+                          </div>
                                   </TableCell>
                                 ))}
                                 <TableCell className="py-4 px-4 whitespace-nowrap">
                                   <div className="flex items-center space-x-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleViewEntry(entry)}
-                                      title="View Details"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewEntry(entry)}
+                            title="View Details"
                                       className="h-8 w-8 p-0 hover:bg-green-50"
-                                    >
+                          >
                                       <Eye className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleEditEntry(entry)}
-                                      title="Edit Entry"
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditEntry(entry)}
+                            title="Edit Entry"
                                       className="h-8 w-8 p-0 hover:bg-yellow-50"
-                                    >
+                          >
                                       <Edit className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleStatusChange(entry, entry.status === 'completed' ? 'pending' : 'completed')}
-                                      title="Change Status"
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(entry, entry.status === 'completed' ? 'pending' : 'completed')}
+                            title="Change Status"
                                       className={`h-8 w-8 p-0 ${
                                         entry.status === 'completed' 
                                           ? 'text-green-600 hover:bg-green-50' 
@@ -1357,19 +1427,19 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                                       }`}
                                     >
                                       <CheckCircle className="w-3 h-3" />
-                                    </Button>
-                                  </div>
+                          </Button>
+                        </div>
                                 </TableCell>
                               </TableRow>
                             );
                           })}
                         </TableBody>
                       </Table>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
+            </div>
+            </div>
+          </div>
+        </div>
           )}
 
           {/* Enhanced Pagination */}
@@ -1384,7 +1454,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
                 ) : (
                   `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, totalEntries)} of ${totalEntries} entries`
                 )}
-              </div>
+      </div>
               <Pagination>
                 <PaginationContent className="gap-2">
                   <PaginationItem>

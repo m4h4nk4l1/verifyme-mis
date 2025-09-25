@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +16,10 @@ interface FormBuilderProps {
   organizationId?: string
 }
 
+interface FormFieldWithActive extends Omit<FormField, 'is_active'> {
+  is_active?: boolean
+}
+
 export function FormBuilder({ organizationId }: FormBuilderProps) {
   const [schemas, setSchemas] = useState<FormSchema[]>([])
   const [loading, setLoading] = useState(true)
@@ -23,11 +27,7 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
   const [editingSchema, setEditingSchema] = useState<FormSchema | null>(null)
   const { user } = useAuth()
 
-  useEffect(() => {
-    fetchSchemas()
-  }, [organizationId])
-
-  const fetchSchemas = async () => {
+  const fetchSchemas = useCallback(async () => {
     try {
       setLoading(true)
       const response = await apiClient.getFormSchemas(organizationId)
@@ -42,7 +42,11 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [organizationId])
+
+  useEffect(() => {
+    fetchSchemas()
+  }, [fetchSchemas])
 
   const handleCreateSchema = async (schemaData: Partial<FormSchema>) => {
     try {
@@ -77,7 +81,15 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
       const origByName = new Map(original.map(f => [f.name, f]))
       const editByName = new Map(edited.map(f => [f.name, f]))
       
-      const operations: any[] = []
+      const operations: Array<{
+        op: string;
+        field?: FormField;
+        name?: string;
+        changes?: Record<string, unknown>;
+        order?: string[];
+        from?: string;
+        to?: string;
+      }> = []
       
       // Add new fields
       for (const f of edited) {
@@ -103,10 +115,10 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
       for (const f of edited) {
         const prev = origByName.get(f.name)
         if (prev) {
-          const changes: any = {}
+          const changes: Record<string, unknown> = {}
           for (const key of ['display_name','field_type','is_required','is_unique','default_value','help_text','validation_rules','is_active']) {
-            if (JSON.stringify(prev[key]) !== JSON.stringify(f[key])) {
-              changes[key] = f[key]
+            if (JSON.stringify((prev as unknown as Record<string, unknown>)[key]) !== JSON.stringify((f as unknown as Record<string, unknown>)[key])) {
+              changes[key] = (f as unknown as Record<string, unknown>)[key]
             }
           }
           if (Object.keys(changes).length) {
@@ -116,7 +128,10 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
       }
       
       if (operations.length > 0) {
-        const expected_version = (editingSchema as any)?.version || 1
+        // Get the latest schema version first to avoid conflicts
+        const latestSchema = await apiClient.getFormSchema(schemaId)
+        const expected_version = (latestSchema as FormSchema & { version?: number })?.version || 1
+        
         await apiClient.mutateFormSchema(schemaId, { expected_version, operations })
       }
       
@@ -124,6 +139,16 @@ export function FormBuilder({ organizationId }: FormBuilderProps) {
       fetchSchemas()
     } catch (error) {
       console.error('Error updating schema:', error)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: { error?: string }, status?: number } }
+        if (errorResponse.response?.status === 409) {
+          toast.error('Schema was modified by another user. Please refresh and try again.')
+        } else {
+          toast.error(errorResponse.response?.data?.error || 'Failed to update form schema')
+        }
+      } else {
+        toast.error('Failed to update form schema')
+      }
     }
   }
 
@@ -269,7 +294,8 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
     description: schema?.description || '',
     max_fields: schema?.max_fields || 120,
     tat_hours_limit: schema?.tat_hours_limit || 24,
-    fields_definition: schema?.fields_definition || []
+    // Filter out deprecated fields (is_active: false) when editing existing schemas
+    fields_definition: schema?.fields_definition?.filter((field: FormFieldWithActive) => field.is_active !== false) || []
   })
 
   const [newField, setNewField] = useState({
@@ -283,6 +309,9 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
     options: '', // For SELECT fields - comma-separated options
     order: 0
   })
+
+  const [showDeprecatedFields, setShowDeprecatedFields] = useState(false)
+  const [reactivatingFields, setReactivatingFields] = useState<Set<string>>(new Set())
 
   // Check if this is an existing schema (has an ID)
   const isExistingSchema = !!schema?.id
@@ -355,6 +384,57 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
       ...formData,
       fields_definition: updatedFields
     })
+  }
+
+  const handleReactivateField = async (fieldName: string) => {
+    if (!schema?.id) return
+    
+    // Add to loading state
+    setReactivatingFields(prev => new Set([...prev, fieldName]))
+    
+    try {
+      // Get the latest schema version first
+      const latestSchema = await apiClient.getFormSchema(schema.id)
+      const expected_version = (latestSchema as FormSchema & { version?: number })?.version || 1
+      
+      await apiClient.mutateFormSchema(schema.id, { 
+        expected_version, 
+        operations: [{ op: 'reactivate', name: fieldName }] 
+      })
+      
+      // Refresh the schema data with the updated version
+      const updatedSchema = await apiClient.getFormSchema(schema.id)
+      setFormData({
+        ...formData,
+        fields_definition: updatedSchema.fields_definition?.filter((field: FormFieldWithActive) => field.is_active !== false) || []
+      })
+      
+      // Update the schema reference with the new version
+      if (onSubmit) {
+        onSubmit({ ...updatedSchema })
+      }
+      
+      toast.success(`Field "${fieldName}" has been reactivated`)
+    } catch (error) {
+      console.error('Error reactivating field:', error)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { data?: { error?: string }, status?: number } }
+        if (errorResponse.response?.status === 409) {
+          toast.error('Schema was modified by another user. Please refresh and try again.')
+        } else {
+          toast.error(errorResponse.response?.data?.error || 'Failed to reactivate field')
+        }
+      } else {
+        toast.error('Failed to reactivate field')
+      }
+    } finally {
+      // Remove from loading state
+      setReactivatingFields(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(fieldName)
+        return newSet
+      })
+    }
   }
 
   const handleMoveField = (index: number, direction: 'up' | 'down') => {
@@ -449,13 +529,26 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
           <div className="border-t pt-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-medium">Form Fields</h4>
-              <span className="text-sm text-gray-500">
-                {formData.fields_definition.length}/{formData.max_fields} fields
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500">
+                  {formData.fields_definition.filter((field: FormFieldWithActive) => field.is_active !== false).length}/{formData.max_fields} active fields
+                </span>
+                {isExistingSchema && schema?.fields_definition?.some((field: FormFieldWithActive) => field.is_active === false) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeprecatedFields(!showDeprecatedFields)}
+                    className="text-xs"
+                  >
+                    {showDeprecatedFields ? 'Hide' : 'Show'} Deprecated Fields
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Add New Field - Available for both new and existing schemas */}
-            {formData.fields_definition.length < formData.max_fields && (
+            {formData.fields_definition.filter((field: FormFieldWithActive) => field.is_active !== false).length < formData.max_fields && (
               <Card className="mb-4">
                 <CardHeader>
                   <CardTitle className="text-sm">Add New Field</CardTitle>
@@ -566,9 +659,9 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
             )}
 
             {/* Existing Fields */}
-            {formData.fields_definition.length > 0 && (
+            {formData.fields_definition.filter((field: FormFieldWithActive) => field.is_active !== false).length > 0 && (
               <div className="space-y-2">
-                {formData.fields_definition.map((field, index) => (
+                {formData.fields_definition.filter((field: FormFieldWithActive) => field.is_active !== false).map((field, index) => (
                   <Card key={field.id || index}>
                     <CardContent className="pt-4">
                       <div className="flex items-center justify-between">
@@ -624,6 +717,57 @@ function SchemaModal({ schema, onClose, onSubmit }: SchemaModalProps) {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+
+            {/* Deprecated Fields Section */}
+            {showDeprecatedFields && isExistingSchema && schema?.fields_definition?.some((field: FormFieldWithActive) => field.is_active === false) && (
+              <div className="mt-6">
+                <h5 className="text-md font-medium text-gray-700 mb-3">Deprecated Fields</h5>
+                <div className="space-y-2">
+                  {schema.fields_definition
+                    .filter((field: FormFieldWithActive) => field.is_active === false)
+                    .map((field, index) => (
+                    <Card key={`deprecated-${field.id || index}`} className="border-orange-200 bg-orange-50">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4">
+                              <div>
+                                <span className="font-medium text-orange-800">{field.display_name}</span>
+                                <span className="text-sm text-orange-600 ml-2">({field.field_type})</span>
+                              </div>
+                              <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded">Deprecated</span>
+                              {field.is_required && (
+                                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Required</span>
+                              )}
+                              {field.is_unique && (
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Unique</span>
+                              )}
+                            </div>
+                            {field.help_text && (
+                              <p className="text-sm text-orange-600 mt-1">{field.help_text}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReactivateField(field.name)}
+                              disabled={reactivatingFields.has(field.name)}
+                              className="text-green-600 border-green-300 hover:bg-green-50 disabled:opacity-50"
+                            >
+                              <span className="text-xs">
+                                {reactivatingFields.has(field.name) ? 'Reactivating...' : 'Reactivate'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
           </div>

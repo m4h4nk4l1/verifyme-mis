@@ -646,6 +646,33 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return response
 
 
+class PasswordVerificationView(APIView):
+    """View for verifying user password before sensitive operations like export"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Verify user password"""
+        user = request.user
+        password = request.data.get('password')
+        
+        if not password:
+            return Response(
+                {'error': 'Password is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if user.check_password(password):
+            return Response({
+                'verified': True,
+                'message': 'Password verified successfully'
+            })
+        else:
+            return Response(
+                {'error': 'Invalid password'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
 class CustomTokenRefreshView(TokenRefreshView):
     """Custom refresh token view that includes user data in response"""
     def post(self, request, *args, **kwargs):

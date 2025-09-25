@@ -273,9 +273,26 @@ export const apiClient = {
   },
 
   // Mutate schema fields (versioned operations)
-  mutateFormSchema: async (id: string, payload: { expected_version: number; operations: unknown[] }) => {
-    const response = await api.post(`/forms/api/schemas/${id}/mutate-fields/`, payload);
-    return response.data;
+  mutateFormSchema: async (id: string, payload: { expected_version: number; operations: unknown[] }, retryCount = 0): Promise<unknown> => {
+    try {
+      const response = await api.post(`/forms/api/schemas/${id}/mutate-fields/`, payload);
+      return response.data;
+    } catch (error) {
+      // Handle version conflicts with automatic retry
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorResponse = error as { response?: { status?: number } }
+        if (errorResponse.response?.status === 409 && retryCount < 2) {
+          // Get the latest schema version and retry
+          const latestSchema = await apiClient.getFormSchema(id);
+          const newPayload = {
+            ...payload,
+            expected_version: (latestSchema as { version?: number })?.version || 1
+          };
+          return apiClient.mutateFormSchema(id, newPayload, retryCount + 1);
+        }
+      }
+      throw error;
+    }
   },
 
   // Form Entries
@@ -501,9 +518,19 @@ export const apiClient = {
 
   // Export
   exportData: async (data: Record<string, unknown>) => {
+    console.log('🌐 API Client - Sending export request to /forms/api/export/')
+    console.log('📤 Export data:', data)
+    
     const response = await api.post('/forms/api/export/', data, {
       responseType: 'blob',
     });
+    
+    console.log('📥 API Client - Received response:', response)
+    console.log('📊 Response status:', response.status)
+    console.log('📊 Response headers:', response.headers)
+    console.log('📊 Response data type:', typeof response.data)
+    console.log('📊 Response data size:', response.data?.size || 'unknown')
+    
     return response.data;
   },
 
@@ -571,6 +598,12 @@ export const apiClient = {
       
       throw new Error('Failed to export data. Please try again.')
     }
+  },
+
+  // Password verification
+  verifyPassword: async (password: string) => {
+    const response = await api.post('/accounts/api/verify-password/', { password });
+    return response.data;
   },
 
   // Analytics

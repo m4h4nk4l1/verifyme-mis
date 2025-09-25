@@ -155,9 +155,9 @@ export function FormView({
       toast.error('Please select a form schema')
       return
     }
-    
+
     if (!validateForm()) return
-    
+
     setSubmitting(true)
     let tempEntryId: string | null = null
     
@@ -180,15 +180,15 @@ export function FormView({
       // If there are files to upload, create a single temporary entry
       if (filesToUpload.length > 0) {
         console.log(`📋 Creating single temp entry for ${filesToUpload.length} files`)
-        const tempEntryData = {
-          form_schema: selectedSchema.id,
+                const tempEntryData = {
+                  form_schema: selectedSchema.id,
           form_data: { temp: 'temp' }, // Temporary data
-          organization: user.organization,
-          employee: user.id
-        }
-        
+                  organization: user.organization,
+                  employee: user.id
+                }
+                
         try {
-          const tempEntry = await apiClient.createFormEntry(tempEntryData)
+                const tempEntry = await apiClient.createFormEntry(tempEntryData)
           tempEntryId = tempEntry.id
           console.log(`✅ Single temp entry created:`, tempEntryId)
         } catch (error) {
@@ -203,17 +203,17 @@ export function FormView({
           const uploadPromise = (async () => {
             try {
               console.log(`📤 Starting file upload for ${fieldName}:`, file.name)
-              
-              // Upload the file with the temporary form entry ID
-              console.log(`📤 Uploading file to S3 for ${fieldName}`)
-              const uploadedFile = await apiClient.uploadFormFieldFile(
+                
+                // Upload the file with the temporary form entry ID
+                console.log(`📤 Uploading file to S3 for ${fieldName}`)
+                const uploadedFile = await apiClient.uploadFormFieldFile(
                 tempEntryId!,
-                fieldName,
+                  fieldName,
                 file,
-                `Uploaded for ${field.display_name}`
-              )
-              
-              console.log(`✅ File uploaded successfully for ${fieldName}:`, uploadedFile)
+                  `Uploaded for ${field.display_name}`
+                )
+                
+                console.log(`✅ File uploaded successfully for ${fieldName}:`, uploadedFile)
               
               // Store the S3 URL in form data - try different possible field names
               const s3Url = uploadedFile.file_url || uploadedFile.s3_url || uploadedFile.url
@@ -222,25 +222,25 @@ export function FormView({
               if (s3Url) {
                 processedFormData[fieldName] = s3Url
                 console.log(`💾 Stored S3 URL for field ${fieldName}`)
-              } else {
+                } else {
                 console.error(`❌ No S3 URL found in response for ${fieldName}`)
                 throw new Error(`No S3 URL returned for ${fieldName}`)
+                }
+                
+              } catch (uploadError) {
+                console.error(`❌ Error uploading file for ${fieldName}:`, uploadError)
+                toast.error(`Failed to upload ${field.display_name}`)
+                throw uploadError
               }
-              
-            } catch (uploadError) {
-              console.error(`❌ Error uploading file for ${fieldName}:`, uploadError)
-              toast.error(`Failed to upload ${field.display_name}`)
-              throw uploadError
-            }
-          })()
-          
-          fileUploadPromises.push(uploadPromise)
-        }
+            })()
+            
+            fileUploadPromises.push(uploadPromise)
+      }
 
-        // Wait for all file uploads to complete
-        if (fileUploadPromises.length > 0) {
+      // Wait for all file uploads to complete
+      if (fileUploadPromises.length > 0) {
           try {
-            await Promise.all(fileUploadPromises)
+        await Promise.all(fileUploadPromises)
           } catch (error) {
             console.error('❌ One or more file uploads failed:', error)
             // Clean up the temporary entry if file uploads failed
@@ -496,8 +496,8 @@ export function FormView({
                     <div>
                       <span className="text-sm font-bold text-gray-900">{value.name}</span>
                       <span className="text-xs text-gray-500 ml-2 font-medium">
-                        ({(value.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
+                    ({(value.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
                     </div>
                   ) : (
                     <a 
@@ -626,39 +626,39 @@ export function FormView({
               <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <div>
+        <div>
                 <h1 className="text-4xl font-bold text-gray-900">
                   Create New Form Entry
                 </h1>
                 <p className="text-lg text-gray-600 mt-2 font-medium">Fill out the form below to create a new entry</p>
               </div>
             </div>
-          </div>
-          
+        </div>
+        
           {/* Enhanced Schema Selection */}
           <div className="flex items-center gap-4 bg-white rounded-xl p-4 border-2 border-blue-200 shadow-lg">
             <Label htmlFor="schema-select" className="text-base font-bold text-gray-800 whitespace-nowrap">
               Form Type:
             </Label>
-            <select
-              id="schema-select"
-              value={selectedSchema.id}
-              onChange={(e) => {
-                const newSchema = schemas.find(s => s.id === e.target.value)
-                if (newSchema) setSelectedSchema(newSchema)
-              }}
-              disabled={readOnly}
+          <select
+            id="schema-select"
+            value={selectedSchema.id}
+            onChange={(e) => {
+              const newSchema = schemas.find(s => s.id === e.target.value)
+              if (newSchema) setSelectedSchema(newSchema)
+            }}
+            disabled={readOnly}
               className="px-6 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 font-bold min-w-[250px] text-base"
-            >
-              {schemas.map((schema) => (
-                <option key={schema.id} value={schema.id}>
-                  {schema.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          >
+            {schemas.map((schema) => (
+              <option key={schema.id} value={schema.id}>
+                {schema.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
+                  </div>
 
       {/* Enhanced Form Content */}
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-8">
@@ -668,42 +668,42 @@ export function FormView({
             <CardTitle className="text-xl font-bold flex items-center gap-3">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <span className="text-sm font-bold">📝</span>
-              </div>
+                  </div>
               Form Details
-            </CardTitle>
-          </CardHeader>
+                </CardTitle>
+              </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sections['Form Fields'].map((field) => (
                 <div key={field.name} className="group">
-                  {renderField(field)}
+                      {renderField(field)}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
         {/* Enhanced Submit Button */}
         {!readOnly && (
           <div className="flex justify-center pt-8">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-1 shadow-lg">
-              <Button
-                type="submit"
-                disabled={submitting}
+            <Button
+              type="submit"
+              disabled={submitting}
                 className="bg-white text-blue-600 hover:bg-gray-50 border-0 px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200 hover:shadow-xl"
-              >
-                {submitting ? (
-                  <>
+            >
+              {submitting ? (
+                <>
                     <RefreshCw className="h-5 w-5 mr-3 animate-spin" />
                     Creating Entry...
-                  </>
-                ) : (
-                  <>
+                </>
+              ) : (
+                <>
                     <Plus className="h-5 w-5 mr-3" />
                     Create Entry
-                  </>
-                )}
-              </Button>
+                </>
+              )}
+            </Button>
             </div>
           </div>
         )}

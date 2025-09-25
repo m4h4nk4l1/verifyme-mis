@@ -26619,3 +26619,301 @@ INFO 2025-09-24 07:09:07,105 basehttp 191985 139850242062016 "POST /forms/api/en
 INFO 2025-09-24 07:09:07,175 basehttp 191985 139850225276608 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
 INFO 2025-09-24 07:09:07,349 basehttp 191985 139850745362112 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
 INFO 2025-09-24 07:09:07,718 basehttp 191985 139850736969408 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6165
+INFO 2025-09-25 07:47:21,787 autoreload 15796 129125923722688 Watching for file changes with StatReloader
+INFO 2025-09-25 07:47:53,054 basehttp 15796 129125328090816 "OPTIONS /accounts/api/users/profile/ HTTP/1.1" 200 0
+WARNING 2025-09-25 07:47:53,105 log 15796 129125328090816 Unauthorized: /accounts/api/users/profile/
+WARNING 2025-09-25 07:47:53,105 basehttp 15796 129125328090816 "GET /accounts/api/users/profile/ HTTP/1.1" 401 172
+INFO 2025-09-25 07:48:21,635 basehttp 15796 129125328090816 "OPTIONS /accounts/api/token/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:24,274 basehttp 15796 129125328090816 "POST /accounts/api/token/ HTTP/1.1" 200 1117
+INFO 2025-09-25 07:48:27,517 basehttp 15796 129125328090816 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:27,520 basehttp 15796 129125318649536 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:27,529 basehttp 15796 129125328090816 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:27,533 basehttp 15796 129125230569152 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:27,533 basehttp 15796 129125238961856 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:27,534 basehttp 15796 129125222176448 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:28,445 basehttp 15796 129125318649536 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 07:48:28,732 basehttp 15796 129125213783744 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6813
+INFO 2025-09-25 07:48:28,735 basehttp 15796 129125230569152 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6813
+INFO 2025-09-25 07:48:28,737 basehttp 15796 129125328090816 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6813
+INFO 2025-09-25 07:48:28,740 basehttp 15796 129125222176448 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6813
+INFO 2025-09-25 07:48:29,297 basehttp 15796 129125318649536 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 07:48:29,912 basehttp 15796 129125318649536 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 07:48:29,920 basehttp 15796 129125222176448 "OPTIONS /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:30,342 basehttp 15796 129125318649536 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 07:48:30,477 basehttp 15796 129125222176448 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3224
+INFO 2025-09-25 07:48:31,081 basehttp 15796 129125222176448 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3224
+INFO 2025-09-25 07:48:52,015 basehttp 15796 129125222176448 "OPTIONS /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 0
+INFO 2025-09-25 07:48:52,633 views 15796 129125222176448 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 6
+INFO 2025-09-25 07:48:52,635 basehttp 15796 129125222176448 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2044
+INFO 2025-09-25 07:48:53,116 basehttp 15796 129125222176448 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 07:48:53,730 basehttp 15796 129125222176448 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3225
+INFO 2025-09-25 07:49:16,129 views 15796 129125222176448 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 7
+INFO 2025-09-25 07:49:16,132 basehttp 15796 129125222176448 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2045
+INFO 2025-09-25 07:49:16,554 basehttp 15796 129125222176448 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 07:49:17,172 basehttp 15796 129125222176448 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 08:02:34,251 basehttp 15796 129125230569152 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 08:02:34,956 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 08:02:54,814 basehttp 15796 129125230569152 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 08:02:55,468 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 08:03:16,119 basehttp 15796 129125230569152 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 08:03:16,734 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 08:03:35,709 views 15796 129125230569152 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 8
+INFO 2025-09-25 08:03:35,712 basehttp 15796 129125230569152 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2045
+INFO 2025-09-25 08:03:36,192 basehttp 15796 129125230569152 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 08:03:36,828 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+WARNING 2025-09-25 09:11:21,988 log 15796 129125230569152 Unauthorized: /accounts/api/users/profile/
+WARNING 2025-09-25 09:11:21,989 basehttp 15796 129125230569152 "GET /accounts/api/users/profile/ HTTP/1.1" 401 172
+INFO 2025-09-25 09:11:39,968 basehttp 15796 129125230569152 "POST /accounts/api/token/ HTTP/1.1" 200 1117
+INFO 2025-09-25 09:11:41,121 basehttp 15796 129125230569152 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:11:41,465 basehttp 15796 129125238961856 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:11:41,466 basehttp 15796 129125318649536 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:11:41,466 basehttp 15796 129125328090816 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:11:41,477 basehttp 15796 129125222176448 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:11:41,940 basehttp 15796 129125230569152 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:11:42,425 basehttp 15796 129125222176448 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:11:42,845 basehttp 15796 129125222176448 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:11:42,984 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 09:11:43,615 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 09:11:59,094 views 15796 129125230569152 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 9
+INFO 2025-09-25 09:11:59,095 basehttp 15796 129125230569152 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2046
+INFO 2025-09-25 09:11:59,504 basehttp 15796 129125230569152 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:12:00,154 basehttp 15796 129125230569152 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:15:37,796 autoreload 15796 129125923722688 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:15:41,994 autoreload 27691 129511781942720 Watching for file changes with StatReloader
+INFO 2025-09-25 09:15:58,176 autoreload 27691 129511781942720 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:15:59,828 autoreload 27869 132693797881280 Watching for file changes with StatReloader
+INFO 2025-09-25 09:16:20,691 basehttp 27869 132693202302656 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:16:21,391 basehttp 27869 132693202302656 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:16:45,281 basehttp 27869 132693202302656 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:16:45,928 basehttp 27869 132693202302656 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:17:04,383 basehttp 27869 132693202302656 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:17:05,014 basehttp 27869 132693202302656 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:17:28,963 basehttp 27869 132693202302656 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:17:29,620 basehttp 27869 132693202302656 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:17:50,068 autoreload 27869 132693797881280 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:17:53,021 autoreload 28851 127587195364800 Watching for file changes with StatReloader
+INFO 2025-09-25 09:18:01,271 views 28851 127586599433920 Reactivated field: customer_name
+INFO 2025-09-25 09:18:01,313 views 28851 127586599433920 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 10
+INFO 2025-09-25 09:18:01,316 basehttp 28851 127586599433920 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2046
+INFO 2025-09-25 09:18:01,322 basehttp 28851 127586599433920 "OPTIONS /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:18:02,103 basehttp 28851 127586599433920 "GET /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 2046
+WARNING 2025-09-25 09:18:04,981 log 28851 127586599433920 Conflict: /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/
+WARNING 2025-09-25 09:18:04,982 basehttp 28851 127586599433920 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 409 110
+INFO 2025-09-25 09:18:28,557 basehttp 28851 127586599433920 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:18:29,848 basehttp 28851 127586599433920 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:18:30,179 basehttp 28851 127586357208768 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6819
+INFO 2025-09-25 09:18:30,180 basehttp 28851 127586589992640 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6819
+INFO 2025-09-25 09:18:30,222 basehttp 28851 127586581599936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6819
+INFO 2025-09-25 09:18:30,262 basehttp 28851 127586365601472 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6819
+INFO 2025-09-25 09:18:30,674 basehttp 28851 127586599433920 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:18:33,483 basehttp 28851 127586599433920 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:18:34,245 basehttp 28851 127586599433920 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:18:34,381 basehttp 28851 127586365601472 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:18:34,960 basehttp 28851 127586365601472 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3227
+INFO 2025-09-25 09:18:48,827 views 28851 127586365601472 Reactivated field: pan card
+INFO 2025-09-25 09:18:48,871 views 28851 127586365601472 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 11
+INFO 2025-09-25 09:18:48,872 basehttp 28851 127586365601472 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2045
+INFO 2025-09-25 09:18:49,392 basehttp 28851 127586365601472 "GET /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 2045
+WARNING 2025-09-25 09:18:51,891 log 28851 127586365601472 Conflict: /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/
+WARNING 2025-09-25 09:18:51,891 basehttp 28851 127586365601472 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 409 110
+WARNING 2025-09-25 09:18:58,081 log 28851 127586365601472 Conflict: /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/
+WARNING 2025-09-25 09:18:58,082 basehttp 28851 127586365601472 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 409 110
+INFO 2025-09-25 09:20:36,561 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:20:37,243 basehttp 28851 127586365601472 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 09:21:08,548 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:21:09,232 basehttp 28851 127586365601472 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 09:21:46,910 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:21:48,511 basehttp 28851 127586365601472 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:21:48,930 basehttp 28851 127586599433920 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:21:48,931 basehttp 28851 127586589992640 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:21:48,952 basehttp 28851 127586357208768 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:21:49,043 basehttp 28851 127586581599936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:21:49,604 basehttp 28851 127586365601472 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:22:08,345 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:22:10,121 basehttp 28851 127586599433920 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:10,174 basehttp 28851 127586589992640 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:10,230 basehttp 28851 127586357208768 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:10,241 basehttp 28851 127586581599936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:10,261 basehttp 28851 127586365601472 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:22:11,103 basehttp 28851 127586365601472 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:22:26,943 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:22:28,145 basehttp 28851 127586365601472 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:22:28,252 basehttp 28851 127586589992640 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:28,258 basehttp 28851 127586581599936 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:28,260 basehttp 28851 127586599433920 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:29,252 basehttp 28851 127586357208768 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6817
+INFO 2025-09-25 09:22:34,045 basehttp 28851 127586365601472 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:25:58,564 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:25:59,010 basehttp 28851 127586365601472 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:25:59,143 basehttp 28851 127586357208768 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 09:25:59,706 basehttp 28851 127586357208768 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3226
+INFO 2025-09-25 09:26:11,411 basehttp 28851 127586357208768 "GET /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 2045
+INFO 2025-09-25 09:26:11,937 views 28851 127586357208768 Reactivated field: mobile
+INFO 2025-09-25 09:26:11,982 views 28851 127586357208768 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 12
+INFO 2025-09-25 09:26:11,983 basehttp 28851 127586357208768 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2044
+INFO 2025-09-25 09:26:12,549 basehttp 28851 127586357208768 "GET /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 2044
+INFO 2025-09-25 09:26:13,108 basehttp 28851 127586357208768 "GET /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 2044
+INFO 2025-09-25 09:26:13,716 views 28851 127586357208768 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 13
+INFO 2025-09-25 09:26:13,717 basehttp 28851 127586357208768 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2044
+INFO 2025-09-25 09:26:14,177 basehttp 28851 127586357208768 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:26:14,764 basehttp 28851 127586357208768 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3225
+INFO 2025-09-25 09:27:43,551 autoreload 28851 127587195364800 /home/kio/Review/Swanand/verifyme/verifyme_backend/accounts/views.py changed, reloading.
+INFO 2025-09-25 09:27:45,292 autoreload 32481 132672412882368 Watching for file changes with StatReloader
+INFO 2025-09-25 09:28:02,962 autoreload 32481 132672412882368 /home/kio/Review/Swanand/verifyme/verifyme_backend/accounts/urls.py changed, reloading.
+INFO 2025-09-25 09:28:04,838 autoreload 32617 126162001118656 Watching for file changes with StatReloader
+INFO 2025-09-25 09:28:21,210 autoreload 32617 126162001118656 /home/kio/Review/Swanand/verifyme/verifyme_backend/accounts/urls.py changed, reloading.
+INFO 2025-09-25 09:28:22,846 autoreload 32768 136033873176000 Watching for file changes with StatReloader
+INFO 2025-09-25 09:29:01,920 autoreload 32768 136033873176000 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:29:04,031 autoreload 32972 138819441538496 Watching for file changes with StatReloader
+INFO 2025-09-25 09:29:24,201 autoreload 32972 138819441538496 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:29:26,298 autoreload 33113 132222482384320 Watching for file changes with StatReloader
+INFO 2025-09-25 09:29:46,300 autoreload 33113 132222482384320 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:29:48,801 autoreload 33296 124404701509056 Watching for file changes with StatReloader
+INFO 2025-09-25 09:30:07,307 autoreload 33296 124404701509056 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:30:09,433 autoreload 33451 139057166427584 Watching for file changes with StatReloader
+INFO 2025-09-25 09:31:09,472 basehttp 33451 139056570693312 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:31:10,559 basehttp 33451 139056570693312 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:31:10,774 basehttp 33451 139056478418624 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:31:10,780 basehttp 33451 139056561252032 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:31:10,879 basehttp 33451 139056461633216 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:31:11,114 basehttp 33451 139056470025920 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:31:11,741 basehttp 33451 139056570693312 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:35:10,429 autoreload 33451 139057166427584 /home/kio/Review/Swanand/verifyme/verifyme_backend/accounts/urls.py changed, reloading.
+INFO 2025-09-25 09:35:12,769 autoreload 35305 127546973595072 Watching for file changes with StatReloader
+INFO 2025-09-25 09:35:27,664 basehttp 35305 127546378155712 "OPTIONS /logs/api/logs/employee-analytics/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:35:27,669 basehttp 35305 127546369763008 "OPTIONS /logs/api/logs/employee-analytics/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:35:28,638 basehttp 35305 127546369763008 "GET /logs/api/logs/employee-analytics/ HTTP/1.1" 200 5300
+INFO 2025-09-25 09:35:29,324 basehttp 35305 127546378155712 "GET /logs/api/logs/employee-analytics/ HTTP/1.1" 200 5300
+INFO 2025-09-25 09:35:29,697 basehttp 35305 127546378155712 "OPTIONS /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 0
+INFO 2025-09-25 09:35:29,698 basehttp 35305 127546369763008 "OPTIONS /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 0
+INFO 2025-09-25 09:35:30,340 basehttp 35305 127546369763008 "GET /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 640
+INFO 2025-09-25 09:35:31,046 basehttp 35305 127546369763008 "GET /accounts/api/users/employees/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 640
+INFO 2025-09-25 09:35:51,077 autoreload 35305 127546973595072 /home/kio/Review/Swanand/verifyme/verifyme_backend/accounts/views.py changed, reloading.
+INFO 2025-09-25 09:35:54,450 autoreload 35650 140660531504576 Watching for file changes with StatReloader
+INFO 2025-09-25 09:35:59,890 basehttp 35650 140659935672000 "OPTIONS /accounts/api/token/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:06,068 basehttp 35650 140659935672000 "POST /accounts/api/token/ HTTP/1.1" 200 1162
+INFO 2025-09-25 09:36:27,921 basehttp 35650 140659935672000 "OPTIONS /forms/api/entries/statistics/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:27,978 basehttp 35650 140659818219200 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:27,979 basehttp 35650 140659926230720 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:27,990 basehttp 35650 140659835004608 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:27,991 basehttp 35650 140659826611904 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:27,991 basehttp 35650 140659843397312 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:28,020 basehttp 35650 140659818219200 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:28,033 basehttp 35650 140659835004608 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:28,046 basehttp 35650 140659843397312 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:28,047 basehttp 35650 140659826611904 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:28,047 basehttp 35650 140659926230720 "OPTIONS /forms/api/entries/advanced-filter/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:29,575 basehttp 35650 140659935672000 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:36:29,985 basehttp 35650 140659818219200 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:29,988 basehttp 35650 140659826611904 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:29,994 basehttp 35650 140659843397312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:30,029 basehttp 35650 140659835004608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:30,072 basehttp 35650 140659926230720 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:30,124 basehttp 35650 140659926230720 "OPTIONS /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:31,321 basehttp 35650 140659935672000 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:31,490 basehttp 35650 140659935672000 "OPTIONS /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:31,899 basehttp 35650 140659818219200 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:31,960 basehttp 35650 140659843397312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:31,994 basehttp 35650 140659835004608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:31,994 basehttp 35650 140659826611904 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:32,100 basehttp 35650 140659926230720 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:36:32,473 basehttp 35650 140659935672000 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:36:32,610 basehttp 35650 140659818219200 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:36:33,234 basehttp 35650 140659935672000 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:36:33,369 basehttp 35650 140659926230720 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:36:34,291 basehttp 35650 140659935672000 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:36:56,731 basehttp 35650 140659935672000 "OPTIONS /accounts/api/verify-password/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:36:58,713 basehttp 35650 140659935672000 "POST /accounts/api/verify-password/ HTTP/1.1" 200 60
+INFO 2025-09-25 09:37:36,515 basehttp 35650 140659935672000 "POST /accounts/api/verify-password/ HTTP/1.1" 200 60
+INFO 2025-09-25 09:37:52,423 basehttp 35650 140659935672000 "POST /accounts/api/verify-password/ HTTP/1.1" 200 60
+INFO 2025-09-25 09:38:07,713 basehttp 35650 140659935672000 "POST /accounts/api/verify-password/ HTTP/1.1" 200 60
+INFO 2025-09-25 09:38:33,772 basehttp 35650 140659809826496 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:38:34,195 basehttp 35650 140659809826496 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:38:34,327 basehttp 35650 140659801433792 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3225
+INFO 2025-09-25 09:38:34,877 basehttp 35650 140659801433792 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3225
+INFO 2025-09-25 09:39:28,502 basehttp 35650 140659801433792 "GET /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/ HTTP/1.1" 200 2044
+INFO 2025-09-25 09:39:29,046 views 35650 140659801433792 Schema 59923a79-193b-40d2-a7ab-5b970a03d9f0 mutated by 261b88d9-df26-4850-b724-feddc149a24e; new version 14
+INFO 2025-09-25 09:39:29,048 basehttp 35650 140659801433792 "POST /forms/api/schemas/59923a79-193b-40d2-a7ab-5b970a03d9f0/mutate-fields/ HTTP/1.1" 200 2044
+INFO 2025-09-25 09:39:29,517 basehttp 35650 140659801433792 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:39:30,097 basehttp 35650 140659801433792 "GET /forms/api/schemas/?organization=ed1591b8-749c-4852-8961-726baf8f904c HTTP/1.1" 200 3225
+INFO 2025-09-25 09:39:32,929 basehttp 35650 140659935672000 "OPTIONS /accounts/api/users/profile/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:39:33,386 basehttp 35650 140659935672000 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-25 09:39:34,446 basehttp 35650 140659935672000 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:39:34,710 basehttp 35650 140659926230720 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:34,730 basehttp 35650 140659818219200 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:34,733 basehttp 35650 140659843397312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:34,733 basehttp 35650 140659835004608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:34,736 basehttp 35650 140659826611904 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:35,344 basehttp 35650 140659826611904 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:39:35,537 basehttp 35650 140659935672000 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:35,783 basehttp 35650 140659926230720 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:35,786 basehttp 35650 140659818219200 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:35,788 basehttp 35650 140659843397312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:35,789 basehttp 35650 140659835004608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:36,381 basehttp 35650 140659926230720 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:39:36,411 basehttp 35650 140659935672000 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:39:36,424 basehttp 35650 140659826611904 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:39:37,564 basehttp 35650 140659926230720 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:39:38,396 basehttp 35650 140659826611904 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:10,572 basehttp 35650 140659801433792 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-25 09:47:11,829 basehttp 35650 140659826611904 "GET /accounts/api/users/profile/ HTTP/1.1" 200 527
+INFO 2025-09-25 09:47:12,530 basehttp 35650 140659801433792 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:13,506 basehttp 35650 140659926230720 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:13,510 basehttp 35650 140659935672000 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:13,513 basehttp 35650 140659843397312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:13,685 basehttp 35650 140659835004608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:13,689 basehttp 35650 140659818219200 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:13,828 basehttp 35650 140659826611904 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:14,479 basehttp 35650 140659793041088 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:14,605 basehttp 35650 140659809826496 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:14,656 basehttp 35650 140659239417536 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:14,691 basehttp 35650 140659818219200 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:47:14,750 basehttp 35650 140659801433792 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:15,058 basehttp 35650 140659231024832 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:15,102 basehttp 35650 140659826611904 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:15,413 basehttp 35650 140659843397312 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:15,516 basehttp 35650 140659935672000 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:15,534 basehttp 35650 140659926230720 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:15,577 basehttp 35650 140659835004608 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:15,822 basehttp 35650 140659801433792 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:16,087 basehttp 35650 140659818219200 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:47:16,253 basehttp 35650 140659843397312 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:47:16,672 basehttp 35650 140659835004608 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:17,484 basehttp 35650 140659843397312 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:47:33,644 autoreload 35650 140660531504576 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:47:36,682 autoreload 39234 139925559506368 Watching for file changes with StatReloader
+INFO 2025-09-25 09:47:58,155 autoreload 39234 139925559506368 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:48:00,514 autoreload 39380 137927443527104 Watching for file changes with StatReloader
+INFO 2025-09-25 09:48:21,911 autoreload 39380 137927443527104 /home/kio/Review/Swanand/verifyme/verifyme_backend/forms/views.py changed, reloading.
+INFO 2025-09-25 09:48:26,501 autoreload 39584 136671270716864 Watching for file changes with StatReloader
+INFO 2025-09-25 09:48:39,788 basehttp 39584 136670674921152 "GET /accounts/api/users/profile/ HTTP/1.1" 200 572
+INFO 2025-09-25 09:48:40,929 basehttp 39584 136670674921152 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:48:41,243 basehttp 39584 136670640301760 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:41,277 basehttp 39584 136670288541376 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:41,285 basehttp 39584 136670665479872 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:41,289 basehttp 39584 136670648694464 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:41,298 basehttp 39584 136670657087168 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:41,979 basehttp 39584 136670657087168 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:48:42,419 basehttp 39584 136670674921152 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:42,627 basehttp 39584 136670640301760 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:42,671 basehttp 39584 136670288541376 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:42,749 basehttp 39584 136670665479872 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:42,783 basehttp 39584 136670648694464 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:43,177 basehttp 39584 136670657087168 "POST /forms/api/entries/advanced-filter/ HTTP/1.1" 200 6815
+INFO 2025-09-25 09:48:43,248 basehttp 39584 136670640301760 "GET /forms/api/entries/counts/?search=&status=&dateFrom=&dateTo=&employee=&caseType= HTTP/1.1" 200 51
+INFO 2025-09-25 09:48:43,293 basehttp 39584 136670674921152 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:48:44,161 basehttp 39584 136670640301760 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:48:44,995 basehttp 39584 136670674921152 "GET /forms/api/entries/statistics/ HTTP/1.1" 200 150
+INFO 2025-09-25 09:50:07,562 basehttp 39584 136670674921152 "POST /accounts/api/verify-password/ HTTP/1.1" 200 60
+INFO 2025-09-25 09:50:07,581 basehttp 39584 136670674921152 "OPTIONS /forms/api/export/ HTTP/1.1" 200 0
+INFO 2025-09-25 09:50:08,028 views 39584 136670674921152 🔐 Password verification decorator called for post
+INFO 2025-09-25 09:50:08,028 views 39584 136670674921152 🔐 Request data: {'format': 'pdf', 'password': 'Admin@super@123', 'filters': {'date_range': 'all', 'custom_start_date': '', 'custom_end_date': ''}, 'options': {'include_files': True, 'include_attachments': True}}
+INFO 2025-09-25 09:50:08,028 views 39584 136670674921152 🔐 User: employee@alice.com
+INFO 2025-09-25 09:50:08,028 views 39584 136670674921152 🔐 Password provided: YES
+INFO 2025-09-25 09:50:09,100 views 39584 136670674921152 🔐 Password verification successful for user employee@alice.com
+INFO 2025-09-25 09:50:09,100 views 39584 136670674921152 🔐 Export request from user employee@alice.com: format=pdf, filters={'date_range': 'all', 'custom_start_date': '', 'custom_end_date': ''}
+INFO 2025-09-25 09:50:09,101 views 39584 136670674921152 🔐 Password provided: YES
+INFO 2025-09-25 09:50:09,101 views 39584 136670674921152 🔐 Request data keys: ['format', 'password', 'filters', 'options']
+INFO 2025-09-25 09:50:09,191 views 39584 136670674921152 Found 2 entries for export
+INFO 2025-09-25 09:50:09,234 views 39584 136670674921152 Exporting 2 entries with date range: all_entries
+INFO 2025-09-25 09:50:09,421 basehttp 39584 136670674921152 "POST /forms/api/export/ HTTP/1.1" 200 2542

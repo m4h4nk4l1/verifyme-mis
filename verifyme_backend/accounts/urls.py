@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import OrganizationViewSet, UserViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView
+from .views import OrganizationViewSet, UserViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView, PasswordVerificationView
 
 # Create router and register viewsets
 router = DefaultRouter()
@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('api/logout/', LogoutView.as_view(), name='logout'),
+    path('api/verify-password/', PasswordVerificationView.as_view(), name='verify_password'),
     
     # Alternative auth endpoints (for compatibility)
     path('api/auth/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair_alt'),

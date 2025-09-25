@@ -302,12 +302,12 @@ export function AdvancedFilters({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Filter className="h-5 w-5" />
-          Advanced Filters
-        </CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Advanced Filters
+          </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+        <CardContent className="space-y-6">
         {/* Warnings */}
         {showWarnings && warnings.length > 0 && (
           <Alert variant="destructive">
@@ -325,34 +325,34 @@ export function AdvancedFilters({
           </Alert>
         )}
 
-        {/* Search */}
-        <div className="space-y-2">
-          <Label htmlFor="search">Search</Label>
-          <div className="relative">
+          {/* Search */}
+            <div className="space-y-2">
+              <Label htmlFor="search">Search</Label>
+              <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              id="search"
+                <Input
+                  id="search"
               placeholder="Search in all fields..."
               value={localFilters.search || ''}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="pl-10"
-            />
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="pl-10"
+                />
+            </div>
           </div>
-        </div>
 
-        {/* Date Filters */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Date Filters
-          </h3>
+          {/* Date Filters */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Date Filters
+            </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dateRange">Date Range</Label>
+                             <div className="space-y-2">
+                 <Label htmlFor="dateRange">Date Range</Label>
               <select
                 id="dateRange"
                 value={localFilters.dateRange || ''}
-                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                   onChange={(e) => handleFilterChange('dateRange', e.target.value)}
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {getDateRangeOptions().map(option => (
@@ -361,30 +361,30 @@ export function AdvancedFilters({
                   </option>
                 ))}
               </select>
-            </div>
+               </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
                 value={localFilters.startDate || ''}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              />
-            </div>
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
                 value={localFilters.endDate || ''}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              />
-            </div>
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="month">Month</Label>
+                             <div className="space-y-2">
+                 <Label htmlFor="month">Month</Label>
               <select
                 id="month"
                 value={localFilters.month?.toString() || ''}
@@ -413,16 +413,16 @@ export function AdvancedFilters({
                   </option>
                 ))}
               </select>
+               </div>
             </div>
           </div>
-        </div>
 
-        {/* Business Filters */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Business Filters
-          </h3>
+          {/* Business Filters */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Business Filters
+            </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {hasField('bank_nbfc_name') && (
               <div className="space-y-2">
@@ -437,12 +437,12 @@ export function AdvancedFilters({
             )}
 
             {hasField('location') && (
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                             <div className="space-y-2">
+                 <Label htmlFor="location">Location</Label>
                 <select
                   id="location"
                   value={localFilters.location || ''}
-                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                   onChange={(e) => handleFilterChange('location', e.target.value)}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">All Locations</option>
@@ -463,7 +463,7 @@ export function AdvancedFilters({
                     }
                   })()}
                 </select>
-              </div>
+               </div>
             )}
 
             {hasField('product_type') && (
@@ -486,12 +486,12 @@ export function AdvancedFilters({
             )}
 
             {hasField('case_status') && (
-              <div className="space-y-2">
-                <Label htmlFor="caseStatus">Case Status</Label>
+                             <div className="space-y-2">
+                 <Label htmlFor="caseStatus">Case Status</Label>
                 <select
                   id="caseStatus"
                   value={localFilters.caseStatus || ''}
-                  onChange={(e) => handleFilterChange('caseStatus', e.target.value)}
+                   onChange={(e) => handleFilterChange('caseStatus', e.target.value)}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">All Statuses</option>
@@ -512,11 +512,11 @@ export function AdvancedFilters({
                     }
                   })()}
                 </select>
-              </div>
+               </div>
             )}
 
             {hasField('is_repeat_case') && (
-              <div className="space-y-2">
+                             <div className="space-y-2">
                 <Label htmlFor="isRepeatCase">Repeat Cases</Label>
                 <select
                   id="isRepeatCase"
@@ -530,7 +530,7 @@ export function AdvancedFilters({
                     </option>
                   ))}
                 </select>
-              </div>
+               </div>
             )}
 
             {hasField('tat') && (
@@ -550,16 +550,16 @@ export function AdvancedFilters({
                 </select>
               </div>
             )}
+            </div>
           </div>
-        </div>
 
-        {/* Personnel Filters */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium flex items-center gap-2">
+          {/* Personnel Filters */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Personnel Filters
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              Personnel Filters
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {hasField('field_verifier_name') && (
               <div className="space-y-2">
                 <Label htmlFor="fieldVerifier">Field Verifier Name</Label>
@@ -613,12 +613,12 @@ export function AdvancedFilters({
                 </select>
               </div>
             )}
+            </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
+          {/* Action Buttons */}
         <div className="flex items-center gap-2 pt-4">
-          <Button 
+            <Button
             onClick={() => {
               console.log('🔍 Button clicked!')
               handleApplyFilters()
@@ -629,17 +629,17 @@ export function AdvancedFilters({
           >
             <Filter className="w-4 h-4" />
             Apply Filters
-          </Button>
+            </Button>
           
-          <Button 
+            <Button
             variant="outline"
             onClick={handleClearFilters}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
             <X className="w-4 h-4" />
             Clear All
-          </Button>
+            </Button>
         </div>
 
         {/* Active Filters Display */}
@@ -666,7 +666,7 @@ export function AdvancedFilters({
             </div>
           </div>
         )}
-      </CardContent>
+        </CardContent>
     </Card>
   )
 } 

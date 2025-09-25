@@ -14,19 +14,19 @@ import { Badge } from '@/components/ui/badge'
 import { 
   FileText, 
   Users, 
-  Building2, 
-  Globe, 
-  BarChart3, 
+  Building2,
+  Globe,
+  BarChart3,
   CheckCircle, 
   Clock, 
   RefreshCw, 
   Filter, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  X, 
+  Eye,
+  Edit,
+  Trash2,
+  X,
   User, 
-  File, 
+  File,
   Image,
   Info,
   UserCheck,
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.warn('Failed to fetch file info for ID:', fileId, error);
       setFailedFileIds(prev => new Set([...prev, fileId]));
-      return null;
+    return null;
     }
   }
 
@@ -372,24 +372,24 @@ export default function AdminDashboard() {
 
     // Handle file fields - check if it's a file ID (UUID format)
     if (typeof value === 'string' && value.length === 36 && value.includes('-')) {
-      const file = fileInfo[value];
+        const file = fileInfo[value];
       if (file && typeof file === 'object' && 'file_url' in file) {
-        return (
-          <a 
+          return (
+            <a 
             href={(file as { file_url: string }).file_url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
             📎 {(file as { original_filename?: string }).original_filename || 'View File'}
-          </a>
-        );
-      } else {
-        fetchFileInfo(value);
-        return '📎 Loading...';
+            </a>
+          );
+        } else {
+          fetchFileInfo(value);
+          return '📎 Loading...';
+        }
       }
-    }
-
+      
     // Handle S3 URLs directly
     if (typeof value === 'string' && value.startsWith('http')) {
       if (value.includes('s3.amazonaws.com') || 
@@ -414,8 +414,8 @@ export default function AdminDashboard() {
     }
 
     if (typeof value === 'number') {
-      return value.toString();
-    }
+        return value.toString();
+      }
 
     if (typeof value === 'object') {
       if (value && typeof value === 'object' && 'file_url' in value) {
@@ -701,7 +701,7 @@ export default function AdminDashboard() {
                   <CardTitle className="flex items-center gap-3 text-2xl font-bold text-white">
                     <FileText className="h-7 w-7" />
                     Form Entries Management
-                  </CardTitle>
+                </CardTitle>
                   <CardDescription className="text-blue-100 text-lg mt-1">
                     View and manage all employee form submissions with detailed field data
                   </CardDescription>
@@ -804,9 +804,9 @@ export default function AdminDashboard() {
                             </TableHead>
                           ))}
                           <TableHead className="text-lg font-bold text-gray-800 py-4 px-6">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {formEntries.length === 0 && !entriesLoading ? (
                           <TableRow>
                             <TableCell colSpan={8 + (showFormFields ? getAllFieldNames().length : 0)} className="py-12 text-center">
@@ -831,29 +831,29 @@ export default function AdminDashboard() {
                             }`}
                           >
                             <TableCell className="py-4 px-6">
-                              {getStatusBadge(entry)}
-                            </TableCell>
+                            {getStatusBadge(entry)}
+                          </TableCell>
                             <TableCell className="py-4 px-6">
                               <div className="font-semibold text-gray-900">
-                                {entry.employee?.first_name} {entry.employee?.last_name}
+                            {entry.employee?.first_name} {entry.employee?.last_name}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {entry.employee?.email}
                               </div>
-                            </TableCell>
+                          </TableCell>
                             <TableCell className="py-4 px-6">
                               <div className="font-semibold text-gray-900">
                                 {entry.form_schema_details?.name || entry.form_schema || 'N/A'}
                               </div>
-                            </TableCell>
+                          </TableCell>
                             <TableCell className="py-4 px-6">
-                              {getTatStatus(entry)}
-                            </TableCell>
+                            {getTatStatus(entry)}
+                          </TableCell>
                             <TableCell className="py-4 px-6">
                               <div className="font-semibold text-gray-900">
-                                {formatDate(entry.created_at)}
+                            {formatDate(entry.created_at)}
                               </div>
-                            </TableCell>
+                          </TableCell>
                             <TableCell className="py-4 px-6">
                               <div className="font-semibold text-gray-900">
                                 {entry.entry_id || 'N/A'}
@@ -873,51 +873,51 @@ export default function AdminDashboard() {
                               </TableCell>
                             ))}
                             <TableCell className="py-4 px-6">
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEntrySelect(entry)}
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEntrySelect(entry)}
                                   className="hover:bg-blue-100 text-blue-600"
                                   title="View Details"
-                                >
+                              >
                                   <Eye className="h-5 w-5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEntryEdit(entry)}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEntryEdit(entry)}
                                   className="hover:bg-yellow-100 text-yellow-600"
                                   title="Edit Entry"
-                                >
+                              >
                                   <Edit className="h-5 w-5" />
-                                </Button>
-                                {!entry.is_completed && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEntryComplete(entry)}
-                                    className="hover:bg-green-100 text-green-600"
-                                    title="Mark Complete"
-                                  >
-                                    <CheckCircle className="h-5 w-5" />
-                                  </Button>
-                                )}
+                              </Button>
+                              {!entry.is_completed && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleEntryDelete(entry)}
+                                  onClick={() => handleEntryComplete(entry)}
+                                    className="hover:bg-green-100 text-green-600"
+                                    title="Mark Complete"
+                                >
+                                    <CheckCircle className="h-5 w-5" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEntryDelete(entry)}
                                   className="hover:bg-red-100 text-red-600"
                                   title="Delete Entry"
-                                >
+                              >
                                   <Trash2 className="h-5 w-5" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                         )))}
-                      </TableBody>
-                    </Table>
+                    </TableBody>
+                  </Table>
                   </div>
 
                   {/* Pagination - Moved to bottom */}
@@ -989,9 +989,9 @@ export default function AdminDashboard() {
                                 {page === '...' ? (
                                   <span className="px-4 py-2 text-lg font-semibold text-gray-500">...</span>
                                 ) : (
-                                  <PaginationLink
+                                <PaginationLink
                                     onClick={() => !entriesLoading && setCurrentPage(page as number)}
-                                    isActive={currentPage === page}
+                                  isActive={currentPage === page}
                                     className={`px-4 py-2 text-lg font-semibold ${
                                       entriesLoading 
                                         ? 'pointer-events-none opacity-50' 
@@ -999,9 +999,9 @@ export default function AdminDashboard() {
                                           ? 'bg-blue-600 text-white' 
                                           : 'cursor-pointer hover:bg-blue-100'
                                     }`}
-                                  >
-                                    {page}
-                                  </PaginationLink>
+                                >
+                                  {page}
+                                </PaginationLink>
                                 )}
                               </PaginationItem>
                             ))
