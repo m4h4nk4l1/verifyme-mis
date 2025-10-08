@@ -677,22 +677,26 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ className }) => {
           name: string
           field_type: string
           options?: string[]
+          is_active?: boolean
         }) => {
-          // Check if we already have this field
-          const existingField = fieldObjects.find(f => f.name === field.name)
-          if (!existingField) {
-            fieldObjects.push({
-              name: field.name,
-              field_type: field.field_type,
-              options: field.options
-            });
+          // Only include active fields (filter out deprecated fields)
+          if (field.is_active !== false) {
+            // Check if we already have this field
+            const existingField = fieldObjects.find(f => f.name === field.name)
+            if (!existingField) {
+              fieldObjects.push({
+                name: field.name,
+                field_type: field.field_type,
+                options: field.options
+              });
+            }
           }
         });
       }
     });
     
     const result = fieldObjects.sort((a, b) => a.name.localeCompare(b.name));
-    console.log('Current schemaFields:', result);
+    console.log('Current schemaFields (active only):', result);
     return result;
   };
 

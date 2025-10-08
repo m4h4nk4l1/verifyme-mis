@@ -613,7 +613,8 @@ export function FormView({
     )
   }
 
-  const fields = selectedSchema.fields_definition || []
+  // Filter out deprecated fields for rendering
+  const fields = (selectedSchema.fields_definition || []).filter((field: FormField) => (field as any).is_active !== false)
   const sections = groupFieldsBySection(fields)
 
   return (

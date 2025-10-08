@@ -12,6 +12,7 @@ class DynamicFormSchemaSerializer(serializers.ModelSerializer):
     organization_name = serializers.CharField(source='organization.name', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
     fields_count = serializers.SerializerMethodField()
+    fields_definition = serializers.SerializerMethodField()
     
     class Meta:
         model = DynamicFormSchema
@@ -22,10 +23,34 @@ class DynamicFormSchemaSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'version', 'created_at', 'updated_at']
     
+    def get_fields_definition(self, obj):
+        """Filter out deprecated fields (is_active: false) for employees and regular users"""
+        user = self.context.get('request').user if self.context.get('request') else None
+        
+        if not obj.fields_definition:
+            return []
+        
+        # For employees, only return active fields
+        if user and user.role == 'EMPLOYEE':
+            active_fields = [
+                field for field in obj.fields_definition 
+                if isinstance(field, dict) and field.get('is_active', True) is not False
+            ]
+            print(f"🔍 Employee {user.email} - Filtered {len(obj.fields_definition)} fields to {len(active_fields)} active fields")
+            return active_fields
+        
+        # For admins and super admins, return all fields (including deprecated)
+        return obj.fields_definition
+    
     def get_fields_count(self, obj):
-        """Get the number of fields in the schema"""
+        """Get the number of active fields in the schema"""
         if obj.fields_definition:
-            return len(obj.fields_definition)
+            # Count only active fields
+            active_fields = [
+                field for field in obj.fields_definition 
+                if isinstance(field, dict) and field.get('is_active', True) is not False
+            ]
+            return len(active_fields)
         return 0
 
 class DynamicFormSchemaCreateSerializer(serializers.ModelSerializer):
